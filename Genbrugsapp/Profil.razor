@@ -1,0 +1,23 @@
+namespace Genbrugsapp;
+
+public class profil_razor
+{
+    
+}
+@page "/profil"
+@using SocialMediaProfile
+
+<h3>Dette er profil-siden</h3>
+
+@* Create a new Profile instance and display its properties *@
+@code {
+    private Profile userProfile = new Profile("Brugernavn", "link_til_billede.jpg", 25, "Bio om brugeren", "Lokation");
+}
+
+<div>
+    <h4>Navn: @userProfile.Name</h4>
+    <p>Alder: @userProfile.Age</p>
+    <p>Bio: @userProfile.Bio</p>
+    <p>Lokation: @userProfile.Location</p>
+    <img src="@userProfile.ProfilePicture" alt="Profil billede" style="width: 100px; height: 100px;" />
+</div>
