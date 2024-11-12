@@ -1,0 +1,83 @@
+@page "/annonce"
+@using Core
+@inject HttpClient Http 
+
+<h3 class="page-title">Genbrugs Annoncer</h3>
+
+<div class="filter-section">
+    <label>Kategori:</label>
+    <select @bind="selectedCategory" class="filter-select" @onchange="ApplyFilters">
+        <option value="">Alle</option>
+        @foreach (var category in categories)
+        {
+            <option value="@category">@category</option>
+        }
+    </select>
+
+    <label>Prisområde:</label>
+    <input type="number" placeholder="Min" @bind="minPrice" class="filter-input" @oninput="ApplyFilters" />
+    <input type="number" placeholder="Max" @bind="maxPrice" class="filter-input" @oninput="ApplyFilters" />
+</div>
+
+<div class="search-section">
+    <input type="text" placeholder="Søg efter titel eller beskrivelse" @bind="searchQuery" class="search-input" @oninput="ApplyFilters" />
+</div>
+
+<div class="announcement-list">
+    @if (filteredAnnoncer.Any())
+    {
+        @foreach (var annonce in filteredAnnoncer)
+        {
+            <div class="announcement-item">
+                <img src="@annonce.ImageUrl" alt="Billede af @annonce.Title" class="thumbnail" />
+                <div class="announcement-details">
+                    <h4 class="announcement-title">@annonce.Title</h4>
+                    <p class="announcement-description">@annonce.Description</p>
+                    <p class="announcement-price">Pris: @annonce.Price.ToString("C")</p>
+                    <p class="announcement-status">Status: @annonce.Status</p>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <p class="no-announcements">Ingen annoncer fundet.</p>
+    }
+</div>
+
+@code {
+private List<string> categories = new List<string> { "Elektronik", "Møbler", "Bøger" };
+private List<Annonce> annoncer = new();
+private List<Annonce> filteredAnnoncer = new();
+
+private string selectedCategory = string.Empty;
+private decimal? minPrice;
+private decimal? maxPrice;
+private string searchQuery = string.Empty;
+
+protected override async Task OnInitializedAsync()
+{
+try
+{
+annoncer = await Http.GetFromJsonAsync<List<Annonce>>("api/Annonce");
+filteredAnnoncer = annoncer;
+}
+catch (Exception ex)
+{
+Console.WriteLine($"Fejl ved hentning af annoncer: {ex.Message}");
+}
+}
+
+private void ApplyFilters()
+{
+filteredAnnoncer = annoncer
+.Where(a => (string.IsNullOrEmpty(selectedCategory) || a.CategoryId == selectedCategory) &&
+(!minPrice.HasValue || a.Price >= minPrice) &&
+(!maxPrice.HasValue || a.Price <= maxPrice) &&
+(string.IsNullOrEmpty(searchQuery) ||
+a.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+a.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)))
+.ToList();
+}
+}
+
