@@ -1,0 +1,29 @@
+﻿body {
+    background-color: #f0f4f0; /* Let grøn baggrund for et blødt genbrugslook */
+}
+
+h1.text-success, h3.text-success {
+    color: #4CAF50; /* Dyb grøn farve, der fremhæver genbrugstemaet */
+}
+
+.lead.text-secondary {
+    color: #6c757d; /* Let afdæmpet grå for en professionel kontrast */
+}
+
+.recycle-image-container img {
+    border-radius: 15px; /* Bløde hjørner til et organisk look */
+    border: 3px solid #4CAF50; /* Grøn kant for at fremhæve billedet */
+}
+
+.btn-success {
+    background-color: #4CAF50;
+    border: none;
+}
+
+    .btn-success:hover {
+        background-color: #388E3C; /* Mørkere grøn ved hover for en subtil effekt */
+    }
+
+.shadow-lg {
+    box-shadow: 0 4px 12px rgba(0, 128, 0, 0.2); /* Grøn skygge, der skaber et miljøvenligt indtryk */
+}
