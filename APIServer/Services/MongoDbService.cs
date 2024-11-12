@@ -13,7 +13,6 @@ namespace APIServer.Services
 			_database = mongoClient.GetDatabase(mongoDbSettings.Value.DatabaseName);
 		}
 
-		// Eksempel på at få en User Collection
 		public IMongoCollection<User> Users => _database.GetCollection<User>("User");
 		public IMongoCollection<Ad> Ads => _database.GetCollection<Ad>("Ad");
 		public IMongoCollection<Purchase> Purchases => _database.GetCollection<Purchase>("Purchase");

@@ -10,7 +10,7 @@ namespace APIServer.Model
 		public string Id { get; set; }
 
 		public string Name { get; set; }
-		public string Classroom { get; set; } // Nyt felt i modellen
+		public string Classroom { get; set; } 
 	}
 }
 
