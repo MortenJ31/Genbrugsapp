@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\APIServer\APIServer.csproj" />
+    <ProjectReference Include="..\Genbrugsapp\Genbrugsapp.csproj" />
+  </ItemGroup>
+
 </Project>
