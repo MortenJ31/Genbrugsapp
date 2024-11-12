@@ -1,6 +1,7 @@
 using APIServer.Model;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using APIServer.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,7 @@ builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
