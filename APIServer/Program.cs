@@ -2,12 +2,15 @@ using APIServer.Model;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using APIServer.Services;
+using Core;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 
 builder.Services.AddControllers();
+
+
 
 // Tilføj MongoDB-indstillinger fra appsettings.json
 builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDbSettings"));
@@ -21,7 +24,21 @@ builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 	return new MongoClient(settings.ConnectionString);
 });
 
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddSingleton<MongoDbService>();
+
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("policy", policy =>
+    {
+        policy.AllowAnyOrigin();
+        policy.AllowAnyHeader();
+        policy.AllowAnyMethod();
+    });
+});
+
+// Register HttpClient service
+builder.Services.AddHttpClient();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -36,7 +53,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseCors("policy");
 app.UseAuthorization();
 
 app.MapControllers();

@@ -4,19 +4,28 @@ using System;
 
 namespace Core
 {
-	public class Purchase
-	{
-		[BsonId]
-		[BsonRepresentation(BsonType.ObjectId)]
-		public string Id { get; set; }
+    public class Purchase
+    {
+        [BsonId]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? Id { get; set; }
 
-		[BsonRepresentation(BsonType.ObjectId)]
-		public string UserId { get; set; } // Reference til User
+        [BsonElement("userId")]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? UserId { get; set; }
 
-		[BsonRepresentation(BsonType.ObjectId)]
-		public string AdId { get; set; } // Reference til Ad
+        [BsonElement("adId")]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? AdId { get; set; }
 
-		public DateTime PurchaseDate { get; set; }
-		public string Status { get; set; }
-	}
+        [BsonElement("purchaseDate")]
+        public DateTime PurchaseDate { get; set; }
+
+        [BsonElement("status")]
+        public string Status { get; set; }
+
+        [BsonElement("locationId")]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? LocationId { get; set; }
+    }
 }
