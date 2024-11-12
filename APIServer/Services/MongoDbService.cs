@@ -15,5 +15,10 @@ namespace APIServer.Services
 
 		// Eksempel på at få en User Collection
 		public IMongoCollection<User> Users => _database.GetCollection<User>("User");
+		public IMongoCollection<Ad> Ads => _database.GetCollection<Ad>("Ad");
+		public IMongoCollection<Purchase> Purchases => _database.GetCollection<Purchase>("Purchase");
+		public IMongoCollection<Category> Categories => _database.GetCollection<Category>("Category");
+		public IMongoCollection<Location> Locations => _database.GetCollection<Location>("Location");
 	}
 }
+
