@@ -19,6 +19,153 @@ a, .btn-link {
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
   box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
 }
+.page-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.action-buttons {
+    margin-bottom: 15px;
+}
+
+.add-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    cursor: pointer;
+}
+
+.ads-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.ad-card {
+    width: 280px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s;
+}
+
+.ad-card:hover {
+    transform: scale(1.02);
+}
+
+.ad-image {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.ad-info {
+    padding: 15px;
+}
+
+.ad-title {
+    font-size: 18px;
+    font-weight: bold;
+    margin: 0 0 8px;
+}
+
+.ad-description {
+    color: #555;
+    margin: 0 0 10px;
+}
+
+.ad-price {
+    font-size: 16px;
+    font-weight: bold;
+    color: #4CAF50;
+}
+
+.ad-status {
+    font-size: 14px;
+    color: white;
+    padding: 5px 10px;
+    border-radius: 4px;
+}
+
+.ad-status.active { background-color: #4CAF50; }
+.ad-status.reserved { background-color: #FFA500; }
+.ad-status.sold { background-color: #FF0000; }
+.ad-status.inactive { background-color: #777; }
+
+.ad-category, .ad-location {
+    font-size: 14px;
+    color: #777;
+}
+
+.ad-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    border-top: 1px solid #ddd;
+    background-color: #f9f9f9;
+}
+
+.edit-button, .delete-button {
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+}
+
+.edit-button {
+    background-color: #007BFF;
+    color: white;
+}
+
+.delete-button {
+    background-color: #DC3545;
+    color: white;
+}
+
+.edit-form {
+    max-width: 400px;
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+}
+
+.save-button, .cancel-button {
+    padding: 10px 15px;
+    border: none;
+    cursor: pointer;
+}
+
+.save-button {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.cancel-button {
+    background-color: #777;
+    color: white;
+    margin-left: 10px;
+}
+
+.no-ads-message {
+    color: #777;
+    font-size: 16px;
+}
 
 .content {
     padding-top: 1.1rem;
@@ -81,22 +228,24 @@ a, .btn-link {
         transform: rotate(-90deg);
     }
 
-        .loading-progress circle:last-child {
-            stroke: #1b6ec2;
-            stroke-dasharray: calc(3.141 * var(--blazor-load-percentage, 0%) * 0.8), 500%;
-            transition: stroke-dasharray 0.05s ease-in-out;
-        }
+.loading-progress circle:last-child {
+    stroke: #1b6ec2;
+    stroke-dasharray: 150, 500; 
+    transition: stroke-dasharray 0.1s ease-in-out;
+}
 
 .loading-progress-text {
     position: absolute;
     text-align: center;
     font-weight: bold;
-    inset: calc(20vh + 3.25rem) 0 auto 0.2rem;
+    top: 40%; 
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
-    .loading-progress-text:after {
-        content: var(--blazor-load-percentage-text, "Loading");
-    }
+.loading-progress-text::after {
+    content: "Loading..."; 
+}
 
 code {
     color: #c02d76;

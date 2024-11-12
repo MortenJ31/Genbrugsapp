@@ -7,33 +7,28 @@ using Core;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-
 builder.Services.AddControllers();
 
-
-
-// Tilføj MongoDB-indstillinger fra appsettings.json
+// TilfÃ¸j MongoDB-indstillinger fra appsettings.json
 builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDbSettings"));
 
-
-// Registrer MongoClient som singleton, så vi kan bruge den i vores services
+// Registrer MongoClient som singleton, sÃ¥ vi kan bruge den i vores services
 builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 {
-	// Hent MongoDbSettings og opret en MongoClient
-	var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
-	return new MongoClient(settings.ConnectionString);
+    var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
+    return new MongoClient(settings.ConnectionString);
 });
 
 builder.Services.AddSingleton<MongoDbService>();
 
-
+// Konfigurer CORS til at tillade kun Blazor-klientens URL
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("policy", policy =>
     {
-        policy.AllowAnyOrigin();
-        policy.AllowAnyHeader();
-        policy.AllowAnyMethod();
+        policy.WithOrigins("http://localhost:5176") // Porten til din Blazor WebAssembly-app
+            .AllowAnyHeader()
+            .AllowAnyMethod();
     });
 });
 
@@ -48,12 +43,12 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-	app.UseSwagger();
-	app.UseSwaggerUI();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
 
 app.UseHttpsRedirection();
-app.UseCors("policy");
+app.UseCors("policy"); // Anvend CORS-politikken
 app.UseAuthorization();
 
 app.MapControllers();
