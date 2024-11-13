@@ -2,7 +2,7 @@
 using MongoDB.Bson.Serialization.Attributes;
 using System;
 
-namespace APIServer.Model
+namespace Core
 {
 	public class User
 	{
