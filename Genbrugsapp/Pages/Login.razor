@@ -1,8 +1,12 @@
-﻿@page "/login/"  
+﻿@page "/"
 @* {target:alpha} *@
 @using Genbrugsapp.Service
+
 @inject ILoginService loginService
 @inject NavigationManager navManager
+@inject AuthenticationStateProvider AuthStateProvider
+@* @inject CustomAuthStateProvider AuthStateProvider
+ *@
 
 
 
@@ -49,10 +53,6 @@
     </div>
 </div>
 
-
-
-
-
 @code {
     private string username = "";
     private string password = "";
@@ -63,16 +63,17 @@
 
     private async Task OnClickLogin()
     {
-        // Forsøg login med loginService
         var success = await loginService.Login(username, password);
         if (success)
         {
-            // Naviger til den ønskede side, hvis login lykkes
-            navManager.NavigateTo(target);
+            var customAuthProvider = (CustomAuthStateProvider)AuthStateProvider;
+            var user = await loginService.GetUserLoggedIn();
+            customAuthProvider.MarkUserAsAuthenticated(user);
+
+            navManager.NavigateTo("/home"); // Naviger til forsiden eller en anden beskyttet side
         }
         else
         {
-            // Vis en fejlmeddelelse, hvis login fejler
             errorText = "Forkert kombination. Prøv igen.";
         }
     }
