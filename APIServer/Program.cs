@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using APIServer.Services;
 using Core;
+using APIServer.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,7 @@ builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 });
 
 builder.Services.AddSingleton<MongoDbService>();
+builder.Services.AddSingleton<PurchasesRepository>();
 
 // Configure CORS to allow specific origins, including local Blazor client and optional dynamic origins
 builder.Services.AddCors(options =>
@@ -65,7 +67,6 @@ else
 
 app.UseHttpsRedirection();
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();

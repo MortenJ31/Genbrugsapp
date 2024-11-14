@@ -8,9 +8,11 @@
         public string LocationId { get; set; }
 
         // Ad-oplysninger
-        public string Title { get; set; }
-        public string Description { get; set; }
-        public double Price { get; set; }
-        public string ImageUrl { get; set; }
+        public string AdTitle { get; set; }
+        public string AdDescription { get; set; }
+        public double AdPrice { get; set; }
+        public string AdImageUrl { get; set; }
+
+        public Ad AdDetails { get; set; }
     }
 }

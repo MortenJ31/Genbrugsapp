@@ -7,7 +7,7 @@
 
 @if (purchases == null)
 {
-    <p>Indlæser dine køb...</p>
+    <p>Indlæser mine køb...</p>
 }
 else if (!purchases.Any())
 {
@@ -19,10 +19,10 @@ else
         @foreach (var purchase in purchases)
         {
             <div class="purchase-item">
-                <h4>@purchase.Title</h4>
-                <img src="@purchase.ImageUrl" alt="Product image" class="product-image" />
-                <p><strong>Beskrivelse:</strong> @purchase.Description</p>
-                <p><strong>Pris:</strong> @purchase.Price.ToString("C", new CultureInfo("da-DK"))</p>
+                <h4>@purchase.AdTitle</h4>
+                <img src="@purchase.AdImageUrl" alt="Product image" class="product-image" />
+                <p><strong>Beskrivelse:</strong> @purchase.AdDescription</p>
+                <p><strong>Pris:</strong> @purchase.AdPrice.ToString("C", new CultureInfo("da-DK"))</p>
                 <p><strong>Status:</strong> @purchase.Status</p>
                 <p><strong>Købsdato:</strong> @purchase.PurchaseDate.ToShortDateString()</p>
                 <p><strong>Lokation:</strong> @purchase.LocationId</p>
@@ -39,7 +39,7 @@ else
         try
         {
             var userId = "67320736b20699f02b4c46f7"; // Dynamisk bruger-ID
-            purchases = await HttpClient.GetFromJsonAsync<List<PurchaseDetail>>($"https://localhost:7074/api/Purchase?userId={userId}");
+            purchases = await HttpClient.GetFromJsonAsync<List<PurchaseDetail>>($"https://localhost:7074/api/Purchase/user/{userId}");
         }
         catch (Exception ex)
         {

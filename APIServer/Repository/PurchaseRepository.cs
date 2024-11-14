@@ -4,47 +4,86 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Core;
 using APIServer.Models;
+using Core.Models;
+using MongoDB.Bson;
 
-public class PurchasesRepository
+namespace APIServer.Repositories
 {
-    private readonly IMongoCollection<Purchase> _purchases;
-
-    public PurchasesRepository(IOptions<MongoDbSettings> settings, IMongoClient client)
+    public class PurchasesRepository
     {
-        var database = client.GetDatabase(settings.Value.DatabaseName);
-        _purchases = database.GetCollection<Purchase>("Purchases");
-    }
+        private readonly IMongoCollection<Purchase> _purchases;
+        private readonly IMongoCollection<Ad> _ads;
 
-    public async Task<List<Purchase>> GetSelectedPurchasesAsync()
-    {
-        // Hent valgte indkøb, som endnu ikke er bekræftet
-        return await _purchases.Find(p => !p.IsSelected).ToListAsync();
-    }
-
-    public async Task<List<Purchase>> GetConfirmedPurchasesAsync()
-    {
-        // Hent bekræftede indkøb
-        return await _purchases.Find(p => p.IsSelected).ToListAsync();
-    }
-
-    public async Task AddPurchaseAsync(Purchase purchase)
-    {
-        // Tilføj et nyt køb
-        await _purchases.InsertOneAsync(purchase);
-    }
-
-    public async Task ConfirmPurchasesAsync(List<Purchase> purchases)
-    {
-        foreach (var purchase in purchases)
+        public PurchasesRepository(IOptions<MongoDbSettings> settings, IMongoClient client)
         {
-            purchase.IsSelected = true; // Marker køb som bekræftet
-            await _purchases.ReplaceOneAsync(p => p.Id == purchase.Id, purchase);
+            var database = client.GetDatabase(settings.Value.DatabaseName);
+            _purchases = database.GetCollection<Purchase>("Purchases");
+            _ads = database.GetCollection<Ad>("Ad"); // Til lookup i Ad-kollektionen
+        }
+
+        public async Task<List<PurchaseDetail>> GetPurchasesByUserIdAsync(string userId)
+        {
+            var pipeline = new BsonDocument[]
+            {
+            new BsonDocument("$match", new BsonDocument("userId", userId)),
+            new BsonDocument("$lookup", new BsonDocument
+            {
+                { "from", "Ad" },
+                { "localField", "adId" },
+                { "foreignField", "_id" },
+                { "as", "adDetails" }
+            }),
+            new BsonDocument("$unwind", "$adDetails"),
+            new BsonDocument("$project", new BsonDocument
+            {
+                { "purchaseId", "$_id" },
+                { "purchaseDate", "$purchaseDate" },
+                { "status", "$status" },
+                { "locationId", "$locationId" },
+                { "adTitle", "$adDetails.title" },
+                { "adDescription", "$adDetails.description" },
+                { "adPrice", "$adDetails.price" },
+                { "adImageUrl", "$adDetails.imageUrl" }
+            })
+            };
+
+            return await _purchases.Aggregate<PurchaseDetail>(pipeline).ToListAsync();
+        }
+
+
+        public async Task<Purchase> GetPurchaseByIdAsync(string id)
+        {
+            return await _purchases.Find(p => p.Id == id).FirstOrDefaultAsync();
+        }
+
+        public async Task<List<Purchase>> GetSelectedPurchasesAsync()
+        {
+            return await _purchases.Find(p => !p.IsSelected).ToListAsync();
+        }
+
+        public async Task<List<Purchase>> GetConfirmedPurchasesAsync()
+        {
+            return await _purchases.Find(p => p.IsSelected).ToListAsync();
+        }
+
+        public async Task AddPurchaseAsync(Purchase purchase)
+        {
+            await _purchases.InsertOneAsync(purchase);
+        }
+
+        public async Task ConfirmPurchasesAsync(List<Purchase> purchases)
+        {
+            foreach (var purchase in purchases)
+            {
+                purchase.IsSelected = true;
+                await _purchases.ReplaceOneAsync(p => p.Id == purchase.Id, purchase);
+            }
+        }
+
+        public async Task DeletePurchaseAsync(string id)
+        {
+            await _purchases.DeleteOneAsync(p => p.Id == id);
         }
     }
-
-    public async Task DeletePurchaseAsync(string id)
-    {
-        // Slet køb baseret på Id
-        await _purchases.DeleteOneAsync(p => p.Id == id);
-    }
 }
+

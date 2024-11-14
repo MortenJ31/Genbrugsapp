@@ -23,6 +23,8 @@ namespace Core
 
         [BsonElement("status")]
         public string Status { get; set; }
+        [BsonElement("Price")]
+        public double Price { get; set; }
 
         [BsonElement("locationId")]
         [BsonRepresentation(BsonType.ObjectId)]

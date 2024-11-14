@@ -3,6 +3,7 @@ using Core;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
 using Core.Models;
+using APIServer.Repositories;
 
 namespace APIServer.Controllers
 {
@@ -10,63 +11,29 @@ namespace APIServer.Controllers
     [Route("api/[controller]")]
     public class PurchaseController : ControllerBase
     {
-        private readonly MongoDbService _mongoDbService;
+        private readonly PurchasesRepository _purchasesRepository;
 
-        public PurchaseController(MongoDbService mongoDbService)
+        public PurchaseController(PurchasesRepository purchasesRepository)
         {
-            _mongoDbService = mongoDbService;
+            _purchasesRepository = purchasesRepository;
         }
 
         [HttpGet("user/{userId}")]
         public async Task<IActionResult> GetPurchasesByUserId(string userId)
         {
-            // Hent køb for den specifikke bruger
-            var userPurchases = await _mongoDbService.Purchases
-                .Find(p => p.UserId == userId)
-                .ToListAsync();
-
-            // Liste til at holde PurchaseDetail-objekter med tilhørende Ad-oplysninger
-            var purchaseDetails = new List<PurchaseDetail>();
-
-            foreach (var purchase in userPurchases)
+            var purchaseDetails = await _purchasesRepository.GetPurchasesByUserIdAsync(userId);
+            if (purchaseDetails == null || !purchaseDetails.Any())
             {
-                // Hent Ad-oplysninger baseret på adId fra købet
-                var ad = await _mongoDbService.Ads
-                    .Find(a => a.Id == purchase.AdId)
-                    .FirstOrDefaultAsync();
-
-                if (ad != null)
-                {
-                    Console.WriteLine($"Ad found with Title: {ad.Title}, Price: {ad.Price}, ImageUrl: {ad.ImageUrl}");
-
-                    purchaseDetails.Add(new PurchaseDetail
-                    {
-                        Id = purchase.Id,
-                        PurchaseDate = purchase.PurchaseDate,
-                        Status = purchase.Status,
-                        LocationId = purchase.LocationId,
-                        Title = ad.Title,
-                        Description = ad.Description,
-                        Price = ad.Price,
-                        ImageUrl = ad.ImageUrl
-                    });
-                }
-                else
-                {
-                    Console.WriteLine("Ad not found for purchase.");
-                }
-             }
-
+                return NotFound("Ingen køb fundet for brugeren.");
+            }
             return Ok(purchaseDetails);
         }
 
-
-
         // GET: api/Purchase?userId={userId}
         [HttpGet]
-        public async Task<IActionResult> GetUserPurchases([FromQuery] string userId)
+        public async Task<IActionResult> GetPurchasesByUserIdQuery([FromQuery] string userId)
         {
-            // Henter kun de indkøb, der tilhører den angivne bruger
+            // Konverter userId til ObjectId, hvis nødvendigt
             var purchases = await _mongoDbService.Purchases
                 .Find(p => p.UserId == userId)
                 .ToListAsync();
@@ -77,10 +44,11 @@ namespace APIServer.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetPurchaseById(string id)
         {
-            var purchase = await _mongoDbService.Purchases.Find(p => p.Id == id).FirstOrDefaultAsync();
+            var purchase = await _purchasesRepository.GetPurchaseByIdAsync(id);
             if (purchase == null) return NotFound();
             return Ok(purchase);
         }
+
 
         // POST: api/Purchase
         [HttpPost]
