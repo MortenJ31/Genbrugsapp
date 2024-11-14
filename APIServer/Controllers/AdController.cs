@@ -1,6 +1,8 @@
 ﻿using APIServer.Repositories;
 using Core;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace APIServer.Controllers
@@ -23,6 +25,16 @@ namespace APIServer.Controllers
         public async Task<IActionResult> GetAllAds()
         {
             var ads = await _adRepository.GetAllAdsAsync();
+
+            // Populate each ad with the Location data
+            foreach (var ad in ads)
+            {
+                if (!string.IsNullOrEmpty(ad.LocationId))
+                {
+                    ad.Location = await _locationRepository.GetLocationByIdAsync(ad.LocationId);
+                }
+            }
+
             return Ok(ads);
         }
 
@@ -32,6 +44,13 @@ namespace APIServer.Controllers
         {
             var ad = await _adRepository.GetAdByIdAsync(id);
             if (ad == null) return NotFound();
+
+            // Populate Location if LocationId is set
+            if (!string.IsNullOrEmpty(ad.LocationId))
+            {
+                ad.Location = await _locationRepository.GetLocationByIdAsync(ad.LocationId);
+            }
+
             return Ok(ad);
         }
 
@@ -39,14 +58,14 @@ namespace APIServer.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateAd([FromBody] Ad ad)
         {
-            // Simpel tilføjelse af CreatedAt
             ad.CreatedAt = DateTime.UtcNow;
 
-            // Tilføj Location hvis det er angivet
-            if (!string.IsNullOrEmpty(ad.LocationAddress))
+            // Assign LocationId if a location address is provided
+            if (ad.Location != null && !string.IsNullOrEmpty(ad.Location.Address))
             {
-                var location = await GetOrCreateLocationAsync(ad.LocationAddress);
+                var location = await GetOrCreateLocationAsync(ad.Location);
                 ad.LocationId = location.Id;
+                ad.Location = location; // Populate the ad's Location property
             }
 
             await _adRepository.AddAdAsync(ad);
@@ -60,16 +79,21 @@ namespace APIServer.Controllers
             var existingAd = await _adRepository.GetAdByIdAsync(id);
             if (existingAd == null) return NotFound();
 
-            // Kopiér felter fra updatedAd til existingAd
+            // Copy fields from updatedAd to existingAd
             existingAd.Title = updatedAd.Title;
             existingAd.Description = updatedAd.Description;
             existingAd.Price = updatedAd.Price;
             existingAd.Status = updatedAd.Status;
             existingAd.ImageUrl = updatedAd.ImageUrl;
             existingAd.CategoryId = updatedAd.CategoryId;
-            existingAd.LocationId = updatedAd.LocationId;
-            existingAd.LocationName = updatedAd.LocationName;
-            existingAd.LocationAddress = updatedAd.LocationAddress;
+
+            // Handle Location
+            if (updatedAd.Location != null && !string.IsNullOrEmpty(updatedAd.Location.Address))
+            {
+                var location = await GetOrCreateLocationAsync(updatedAd.Location);
+                existingAd.LocationId = location.Id;
+                existingAd.Location = location; // Update in-memory Location reference
+            }
 
             await _adRepository.UpdateAdAsync(id, existingAd);
             return NoContent();
@@ -86,14 +110,16 @@ namespace APIServer.Controllers
             return NoContent();
         }
 
-        private async Task<Location> GetOrCreateLocationAsync(string locationAddress)
+        private async Task<Location> GetOrCreateLocationAsync(Location location)
         {
+            // Find if a location with the same address exists
             var locations = await _locationRepository.GetAllLocationsAsync();
-            var existingLocation = locations?.FirstOrDefault(loc => loc.Address == locationAddress);
+            var existingLocation = locations?.FirstOrDefault(loc => loc.Address == location.Address);
 
             if (existingLocation == null)
             {
-                var newLocation = new Location { Name = locationAddress, Address = locationAddress };
+                // Create a new location if it doesn't exist
+                var newLocation = new Location { Name = location.Name, Address = location.Address };
                 await _locationRepository.AddLocationAsync(newLocation);
                 return newLocation;
             }

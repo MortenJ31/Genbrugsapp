@@ -61,65 +61,14 @@ else
             <img src="@selectedAd.ImageUrl" alt="Ad image" class="modal-image" />
             <p>@selectedAd.Description</p>
             <p><strong>Pris:</strong> @selectedAd.Price.ToString("C")</p>
-            <p><strong>Lokation:</strong> @selectedAd.LocationName, @selectedAd.LocationAddress</p>
+            <p><strong>Lokation:</strong> @selectedAd.Location?.Name, @selectedAd.Location?.Address</p> <!-- Updated location display -->
             <p><strong>Status:</strong> @selectedAd.Status</p>
         </div>
     </div>
 }
 
 <!-- Formular til oprettelse og redigering af annoncer -->
-<EditForm Model="@currentAd" OnValidSubmit="SaveAd" class="edit-form">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
 
-    <div class="form-group">
-        <label>Titel:</label>
-        <InputText @bind-Value="currentAd.Title" class="form-control" placeholder="Indtast annoncentitel"/>
-    </div>
-    <div class="form-group">
-        <label>Beskrivelse:</label>
-        <InputTextArea @bind-Value="currentAd.Description" class="form-control" placeholder="Beskrivelse af varen"/>
-    </div>
-    <div class="form-group">
-        <label>Pris:</label>
-        <InputNumber @bind-Value="currentAd.Price" class="form-control" placeholder="Angiv prisen i DKK"/>
-    </div>
-    <div class="form-group">
-        <label>Status:</label>
-        <InputSelect @bind-Value="currentAd.Status" class="form-control">
-            <option value="Active">Aktiv</option>
-            <option value="Reserved">Reserveret</option>
-            <option value="Sold">Solgt</option>
-            <option value="Inactive">Inaktiv</option>
-        </InputSelect>
-    </div>
-    <div class="form-group">
-        <label>Billede URL:</label>
-        <InputText @bind-Value="currentAd.ImageUrl" class="form-control" placeholder="URL til billede af varen"/>
-    </div>
-    <div class="form-group">
-        <label>Kategori:</label>
-        <InputSelect @bind-Value="currentAd.CategoryId" class="form-control">
-            <option value="">-- Vælg Kategori --</option>
-            @foreach (var category in categories)
-            {
-                <option value="@category.Id">@category.Name</option>
-            }
-        </InputSelect>
-    </div>
-
-    <div class="form-group">
-        <label>Lokationens Navn:</label>
-        <InputText @bind-Value="currentAd.LocationName" class="form-control" placeholder="F.eks. Campus Aarhus N" />
-    </div>
-    <div class="form-group">
-        <label>Lokationens Adresse:</label>
-        <InputText @bind-Value="currentAd.LocationAddress" class="form-control" placeholder="Indtast adresse" />
-    </div>
-
-    <button type="submit" class="save-button">Gem</button>
-    <button type="button" class="cancel-button" @onclick="CancelEdit">Annuller</button>
-</EditForm>
 
 @code {
     private List<Ad> ads = new List<Ad>();
@@ -131,11 +80,26 @@ else
     private string selectedCategory = "";
     private string selectedPriceRange = "";
     private List<Category> categories = new List<Category>();
+    private List<Location> locations = new List<Location>(); // New list to hold all locations
 
     protected override async Task OnInitializedAsync()
     {
         categories = await Http.GetFromJsonAsync<List<Category>>("http://localhost:5066/api/Category") ?? new List<Category>();
         ads = await Http.GetFromJsonAsync<List<Ad>>("http://localhost:5066/api/Ad") ?? new List<Ad>();
+
+        // Fetch all locations
+        locations = await Http.GetFromJsonAsync<List<Location>>("http://localhost:5066/api/Location") ?? new List<Location>();
+        var locationMap = locations.ToDictionary(loc => loc.Id);
+
+        // Populate each ad's Location property with the corresponding location object
+        foreach (var ad in ads)
+        {
+            if (!string.IsNullOrEmpty(ad.LocationId) && locationMap.TryGetValue(ad.LocationId, out var location))
+            {
+                ad.Location = location;
+            }
+        }
+
         ApplyFilters();
     }
 
@@ -161,6 +125,7 @@ else
 
     private void AddNewAd()
     {
+        
         currentAd = new Ad
         {
             Title = "",

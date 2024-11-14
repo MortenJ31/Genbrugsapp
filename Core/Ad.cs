@@ -12,38 +12,28 @@ namespace Core
 
         [BsonElement("userId")]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string? UserId { get; set; } // Ændret til string for konsistens
+        public string? UserId { get; set; }
 
-        [BsonElement("title")]
-        public string Title { get; set; }
+        [BsonElement("title")] public string Title { get; set; }
 
-        [BsonElement("description")]
-        public string Description { get; set; }
+        [BsonElement("description")] public string Description { get; set; }
 
-        [BsonElement("price")]
-        public double Price { get; set; }
+        [BsonElement("price")] public double Price { get; set; }
 
-        [BsonElement("status")]
-        public string Status { get; set; }
+        [BsonElement("status")] public string Status { get; set; }
 
-        [BsonElement("imageUrl")]
-        public string ImageUrl { get; set; }
+        [BsonElement("imageUrl")] public string ImageUrl { get; set; }
 
-        [BsonElement("createdAt")]
-        public DateTime CreatedAt { get; set; }
+        [BsonElement("createdAt")] public DateTime CreatedAt { get; set; }
 
         [BsonElement("categoryId")]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string CategoryId { get; set; } // Holdes som string
+        public string CategoryId { get; set; }
 
         [BsonElement("locationId")]
         [BsonRepresentation(BsonType.ObjectId)]
-        public string LocationId { get; set; } // Holdes som string
+        public string LocationId { get; set; }
 
-        [BsonElement("locationName")]
-        public string LocationName { get; set; }
-
-        [BsonElement("locationAddress")]
-        public string LocationAddress { get; set; }
+        [BsonIgnore] public Location? Location { get; set; }
     }
 }

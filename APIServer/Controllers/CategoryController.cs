@@ -40,6 +40,7 @@ namespace APIServer.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateCategory([FromBody] Category category)
         {
+            category.Id = null;
             if (category == null)
             {
                 return BadRequest("Category data is required.");
