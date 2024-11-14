@@ -1,4 +1,4 @@
-﻿using APIServer.Model;
+﻿using APIServer.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using Core;

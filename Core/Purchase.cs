@@ -28,10 +28,8 @@ namespace Core
         [BsonRepresentation(BsonType.ObjectId)]
         public string? LocationId { get; set; }
 
+        // UI-specifikke egenskaber til brug i Purchases.razor
         [BsonIgnore] // Dette vil ikke blive gemt i databasen
         public bool IsSelected { get; set; } = false;
-
-        [BsonElement("price")]
-        public decimal Price { get; set; }
     }
 }

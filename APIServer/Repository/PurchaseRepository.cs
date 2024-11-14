@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Core;
+using APIServer.Models;
 
 public class PurchasesRepository
 {

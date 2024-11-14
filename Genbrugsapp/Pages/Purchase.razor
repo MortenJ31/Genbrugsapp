@@ -1,169 +1,49 @@
 @page "/purchases"
-@using Core
+@using Core.Models
+@using System.Globalization
 @inject HttpClient HttpClient
-@inject AuthenticationStateProvider AuthStateProvider
 
-<link href="css/Purchases.css" rel="stylesheet">
+<h3>Mine Indkøb</h3>
 
-<div class="purchases-container">
-    <h3>Mine Indkøb</h3>
-
-    <!-- Sektion for nye varer, som endnu ikke er bekræftet -->
-    <div>
-        <h4>Indkøbsliste</h4>
-        @if (selectedPurchases.Any())
+@if (purchases == null)
+{
+    <p>Indlæser dine køb...</p>
+}
+else if (!purchases.Any())
+{
+    <p>Ingen indkøb fundet.</p>
+}
+else
+{
+    <div class="purchase-list">
+        @foreach (var purchase in purchases)
         {
-            <ul>
-                @foreach (var purchase in selectedPurchases)
-                {
-                    <li>
-                        <input type="checkbox" @bind="purchase.IsSelected" />
-                        @purchase.PurchaseDate.ToShortDateString(): @purchase.ItemName - @purchase.Price.ToString("C")
-                        <button @onclick="() => EditPurchase(purchase)">Rediger</button>
-                        <button @onclick="() => DeletePurchase(purchase)">Slet</button>
-                    </li>
-                }
-            </ul>
-
-            <div>
-                <strong>Total for valgte varer: </strong>
-                @($"{selectedPurchases.Where(p => p.IsSelected).Sum(p => p.Price):C}")
-            </div>
-
-            <button @onclick="ApproveSelectedPurchases" class="approve-button">Godkend Valgte Køb</button>
-            <button class="cancel-button" @onclick="CancelSelectedPurchases">Annuller Valgte Køb</button>
-        }
-        else
-        {
-            <p>Ingen nye varer til godkendelse.</p>
-        }
-    </div>
-
-    <!-- Sektion for allerede bekræftede køb -->
-    <div>
-        <h4>Bekræftede køb</h4>
-        @if (confirmedPurchases.Any())
-        {
-            <ul>
-                @foreach (var purchase in confirmedPurchases)
-                {
-                    <li>
-                        @purchase.PurchaseDate.ToShortDateString(): @purchase.ItemName - @purchase.Price.ToString("C")
-                        <button @onclick="() => EditPurchase(purchase)">Rediger</button>
-                        <button @onclick="() => DeletePurchase(purchase)">Slet</button>
-                    </li>
-                }
-            </ul>
-
-            <div>
-                <strong>Total for bekræftede køb: </strong>
-                @($"{confirmedPurchases.Sum(p => p.Price):C}")
+            <div class="purchase-item">
+                <h4>@purchase.Title</h4>
+                <img src="@purchase.ImageUrl" alt="Product image" class="product-image" />
+                <p><strong>Beskrivelse:</strong> @purchase.Description</p>
+                <p><strong>Pris:</strong> @purchase.Price.ToString("C", new CultureInfo("da-DK"))</p>
+                <p><strong>Status:</strong> @purchase.Status</p>
+                <p><strong>Købsdato:</strong> @purchase.PurchaseDate.ToShortDateString()</p>
+                <p><strong>Lokation:</strong> @purchase.LocationId</p>
             </div>
         }
-        else
-        {
-            <p>Ingen bekræftede køb endnu.</p>
-        }
     </div>
-
-    <!-- Formular til oprettelse/redigering af et køb -->
-    <div class="purchase-form">
-        <h4>@(editMode ? "Rediger Køb" : "Opret Nyt Køb")</h4>
-        <input placeholder="Varenavn" @bind="purchaseForm.ItemName" />
-        <input placeholder="Pris" @bind="purchaseForm.Price" type="number" />
-        <button @onclick="SavePurchase">@((editMode ? "Gem Ændringer" : "Opret Køb"))</button>
-        <button @onclick="CancelEdit">Annuller</button>
-    </div>
-</div>
+}
 
 @code {
-    private List<Purchase> selectedPurchases = new List<Purchase>();
-    private List<Purchase> confirmedPurchases = new List<Purchase>();
-    private Purchase purchaseForm = new Purchase();
-    private bool editMode = false;
-    private string userId;
+    private List<PurchaseDetail> purchases;
 
     protected override async Task OnInitializedAsync()
     {
-        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
-        userId = authState.User.FindFirst(c => c.Type == "sub")?.Value;
-
-        await LoadUserPurchases();
-    }
-
-    private async Task LoadUserPurchases()
-    {
-        var purchases = await HttpClient.GetFromJsonAsync<List<Purchase>>($"api/purchase?userId={userId}");
-        selectedPurchases = purchases.Where(p => p.Status == "pending").ToList();
-        confirmedPurchases = purchases.Where(p => p.Status == "confirmed").ToList();
-    }
-
-    private async Task ApproveSelectedPurchases()
-    {
-        var selectedForConfirmation = selectedPurchases.Where(p => p.IsSelected).ToList();
-
-        if (selectedForConfirmation.Any())
+        try
         {
-            foreach (var purchase in selectedForConfirmation)
-            {
-                purchase.Status = "confirmed";
-                await HttpClient.PatchAsync($"api/purchase/{purchase.Id}/status", JsonContent.Create("confirmed"));
-            }
-
-            selectedPurchases = selectedPurchases.Except(selectedForConfirmation).ToList();
-            confirmedPurchases.AddRange(selectedForConfirmation);
+            var userId = "67320736b20699f02b4c46f7"; // Dynamisk bruger-ID
+            purchases = await HttpClient.GetFromJsonAsync<List<PurchaseDetail>>($"https://localhost:7074/api/Purchase?userId={userId}");
         }
-    }
-
-    private void CancelSelectedPurchases()
-    {
-        selectedPurchases = selectedPurchases.Where(p => !p.IsSelected).ToList();
-    }
-
-    private async Task DeletePurchase(Purchase purchase)
-    {
-        await HttpClient.DeleteAsync($"api/purchase/{purchase.Id}");
-        selectedPurchases.Remove(purchase);
-        confirmedPurchases.Remove(purchase);
-    }
-
-    private void EditPurchase(Purchase purchase)
-    {
-        purchaseForm = new Purchase
-            {
-                Id = purchase.Id,
-                ItemName = purchase.ItemName,
-                Price = purchase.Price,
-                PurchaseDate = purchase.PurchaseDate,
-                Status = purchase.Status,
-                UserId = purchase.UserId
-            };
-        editMode = true;
-    }
-
-    private async Task SavePurchase()
-    {
-        if (editMode)
+        catch (Exception ex)
         {
-            await HttpClient.PutAsJsonAsync($"api/purchase/{purchaseForm.Id}", purchaseForm);
+            Console.WriteLine($"Error fetching purchases: {ex.Message}");
         }
-        else
-        {
-            purchaseForm.UserId = userId;
-            purchaseForm.PurchaseDate = DateTime.UtcNow;
-            purchaseForm.Status = "pending";
-            await HttpClient.PostAsJsonAsync("api/purchase", purchaseForm);
-            selectedPurchases.Add(purchaseForm);
-        }
-
-        purchaseForm = new Purchase();
-        editMode = false;
-        await LoadUserPurchases();
-    }
-
-    private void CancelEdit()
-    {
-        purchaseForm = new Purchase();
-        editMode = false;
     }
 }

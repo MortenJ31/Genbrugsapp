@@ -2,6 +2,7 @@
 using Core;
 using Microsoft.AspNetCore.Mvc;
 using MongoDB.Driver;
+using Core.Models;
 
 namespace APIServer.Controllers
 {
@@ -16,33 +17,49 @@ namespace APIServer.Controllers
             _mongoDbService = mongoDbService;
         }
 
-        // GET: api/Purchase/user/{userId}
         [HttpGet("user/{userId}")]
-        public async Task<IActionResult> GetPurchasesWithDetails(string userId)
+        public async Task<IActionResult> GetPurchasesByUserId(string userId)
         {
-            var purchases = await _mongoDbService.Purchases.Find(p => p.UserId == userId).ToListAsync();
-            var purchaseDetails = new List<PurchaseDetailDTO>();
+            // Hent køb for den specifikke bruger
+            var userPurchases = await _mongoDbService.Purchases
+                .Find(p => p.UserId == userId)
+                .ToListAsync();
 
-            foreach (var purchase in purchases)
+            // Liste til at holde PurchaseDetail-objekter med tilhørende Ad-oplysninger
+            var purchaseDetails = new List<PurchaseDetail>();
+
+            foreach (var purchase in userPurchases)
             {
-                var ad = await _mongoDbService.Ads.Find(a => a.Id == purchase.AdId).FirstOrDefaultAsync();
+                // Hent Ad-oplysninger baseret på adId fra købet
+                var ad = await _mongoDbService.Ads
+                    .Find(a => a.Id == purchase.AdId)
+                    .FirstOrDefaultAsync();
+
                 if (ad != null)
                 {
-                    purchaseDetails.Add(new PurchaseDetailDTO
+                    Console.WriteLine($"Ad found with Title: {ad.Title}, Price: {ad.Price}, ImageUrl: {ad.ImageUrl}");
+
+                    purchaseDetails.Add(new PurchaseDetail
                     {
                         Id = purchase.Id,
                         PurchaseDate = purchase.PurchaseDate,
                         Status = purchase.Status,
                         LocationId = purchase.LocationId,
-                        ItemName = ad.Title,  // Henter titel fra Ad
-                        Price = ad.Price      // Henter pris fra Ad
+                        Title = ad.Title,
+                        Description = ad.Description,
+                        Price = ad.Price,
+                        ImageUrl = ad.ImageUrl
                     });
                 }
-            }
+                else
+                {
+                    Console.WriteLine("Ad not found for purchase.");
+                }
+             }
 
             return Ok(purchaseDetails);
         }
-    }
+
 
 
         // GET: api/Purchase?userId={userId}

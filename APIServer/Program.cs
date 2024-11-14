@@ -1,4 +1,4 @@
-using APIServer.Model;
+using APIServer.Models;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using APIServer.Services;
@@ -9,10 +9,10 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 
-// Tilføj MongoDB-indstillinger fra appsettings.json
+// Add MongoDB settings from appsettings.json
 builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDbSettings"));
 
-// Registrer MongoClient som singleton, så vi kan bruge den i vores services
+// Register MongoClient as a singleton for use in services
 builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
@@ -21,14 +21,22 @@ builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 
 builder.Services.AddSingleton<MongoDbService>();
 
-// Konfigurer CORS til at tillade kun Blazor-klientens URL
+// Configure CORS to allow specific origins, including local Blazor client and optional dynamic origins
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("policy", policy =>
+    options.AddPolicy("AllowSpecificOrigins", policy =>
     {
-        policy.WithOrigins("http://localhost:5176") // Porten til din Blazor WebAssembly-app
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+        policy.WithOrigins("https://localhost:5176", "https://localhost:7251") // Add other allowed URLs here
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+
+    // For development convenience, allow all origins policy
+    options.AddPolicy("AllowAllOrigins", policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
 });
 
@@ -45,10 +53,17 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    // Use more permissive CORS policy in development if needed
+    app.UseCors("AllowAllOrigins");
+}
+else
+{
+    // Use stricter CORS policy in production
+    app.UseCors("AllowSpecificOrigins");
 }
 
 app.UseHttpsRedirection();
-app.UseCors("policy"); // Anvend CORS-politikken
 app.UseAuthorization();
 
 app.MapControllers();
