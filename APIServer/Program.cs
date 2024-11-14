@@ -5,11 +5,24 @@ using APIServer.Repositories;
 using APIServer.Services;
 using Core;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+builder.Services.AddRazorPages();
+
+// Konfigurer Cookie-baseret autentificering
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Account/Login"; // Rute til login-side
+        options.AccessDeniedPath = "/Account/AccessDenied"; // Rute til adgang nægtet-side
+    });
+
+builder.Services.AddAuthorization();
 
 // Tilføj MongoDB-indstillinger fra appsettings.json
 builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDbSettings"));
@@ -36,6 +49,7 @@ builder.Services.AddSingleton<MongoDbService>();
 builder.Services.AddSingleton<IAdRepository, AdRepositoryMongoDB>();
 builder.Services.AddSingleton<ILocationRepository, LocationRepositoryMongoDB>();
 builder.Services.AddSingleton<ICategoryRepository, CategoryRepositoryMongoDB>();
+builder.Services.AddScoped<IPurchaseRepository, PurchaseRepository>();
 
 // Konfigurer CORS til at tillade kun Blazor-klientens URL
 builder.Services.AddCors(options =>
@@ -60,17 +74,26 @@ builder.Services.AddControllers()
     });
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
+// Konfigurer middleware-pipelinen
 if (app.Environment.IsDevelopment())
 {
+    app.UseDeveloperExceptionPage();
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+else
+{
+    app.UseExceptionHandler("/Home/Error");
+    app.UseHsts();
+}
 
 app.UseHttpsRedirection();
+
 app.UseCors("policy"); // Anvend CORS-politikken
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapRazorPages();
 
 app.Run();

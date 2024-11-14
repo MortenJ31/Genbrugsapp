@@ -1,0 +1,73 @@
+﻿@page "/mineindkob"
+@inject HttpClient Http
+@using Core.Models
+
+<h3>Mine Indkøb</h3>
+
+@if (purchases == null)
+{
+    <p>Loading...</p>
+}
+else if (!purchases.Any())
+{
+    <p>Ingen køb fundet.</p>
+}
+else
+{
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Titel</th>
+                <th>Beskrivelse</th>
+                <th>Pris</th>
+                <th>Købsdato</th>
+                <th>Status</th>
+                <th>Billede</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var purchase in purchases)
+            {
+                <tr>
+                    <td>@purchase.AdTitle</td>
+                    <td>@purchase.AdDescription</td>
+                    <td>@purchase.AdPrice.ToString("C")</td>
+                    <td>@purchase.PurchaseDate.ToString("yyyy-MM-dd")</td>
+                    <td>@purchase.Status</td>
+                    <td>
+                        <img src="@purchase.AdImageUrl" alt="Ad Image" width="100" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+    @code {
+        private List<PurchaseWithAdDetails> purchases;
+        private string errorMessage;
+
+        protected override async Task OnInitializedAsync()
+        {
+            try
+            {
+                purchases = await Http.GetFromJsonAsync<List<PurchaseWithAdDetails>>("api/purchase/mineindkob");
+            }
+            catch (HttpRequestException ex)
+            {
+                errorMessage = "An error occurred while fetching purchases. Please check your connection.";
+                Console.WriteLine($"Request error: {ex.Message}");
+            }
+            catch (System.Text.Json.JsonException jsonEx)
+            {
+                errorMessage = "Failed to parse response from server. Please ensure the server returns JSON.";
+                Console.WriteLine($"JSON error: {jsonEx.Message}");
+            }
+            catch (Exception ex)
+            {
+                errorMessage = "An unexpected error occurred.";
+                Console.WriteLine($"Unexpected error: {ex.Message}");
+            }
+        }
+    }

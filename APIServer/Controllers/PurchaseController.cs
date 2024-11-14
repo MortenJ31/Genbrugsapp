@@ -1,26 +1,38 @@
-﻿using APIServer.Services;
+﻿using APIServer.Repositories;
+using APIServer.Services;
 using Core;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 using MongoDB.Driver;
 
 namespace APIServer.Controllers
 {
+    //[Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class PurchaseController : ControllerBase
     {
-        private readonly MongoDbService _mongoDbService;
+        private readonly IPurchaseRepository _purchaseRepository;
 
-        public PurchaseController(MongoDbService mongoDbService)
+        public PurchaseController(IPurchaseRepository purchaseRepository)
         {
-            _mongoDbService = mongoDbService;
+            _purchaseRepository = purchaseRepository;
         }
 
-        // GET: api/Purchase
-        [HttpGet]
-        public async Task<IActionResult> GetAllPurchases()
+        // GET: api/Purchase/mineindkob
+        [HttpGet("mineindkob")]
+        public async Task<IActionResult> GetMyPurchases()
         {
-            var purchases = await _mongoDbService.Purchases.Find(_ => true).ToListAsync();
+            // Hent brugerens userId fra ClaimsPrincipal
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (userId == null)
+            {
+                return Unauthorized("Bruger-ID ikke fundet.");
+            }
+
+            // Hent alle køb for den pågældende userId
+            var purchases = await _purchaseRepository.GetPurchasesByUserIdAsync(userId);
             return Ok(purchases);
         }
 
@@ -28,8 +40,12 @@ namespace APIServer.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetPurchaseById(string id)
         {
-            var purchase = await _mongoDbService.Purchases.Find(p => p.Id == id).FirstOrDefaultAsync();
-            if (purchase == null) return NotFound();
+            var purchase = await _purchaseRepository.GetPurchaseByIdAsync(id);
+            if (purchase == null)
+            {
+                return NotFound();
+            }
+
             return Ok(purchase);
         }
 
@@ -38,8 +54,8 @@ namespace APIServer.Controllers
         public async Task<IActionResult> CreatePurchase([FromBody] Purchase purchase)
         {
             purchase.PurchaseDate = DateTime.UtcNow;
-            purchase.Status = "completed"; // Eksempelstatus, kan ændres til "pending" afhængigt af forretningslogik
-            await _mongoDbService.Purchases.InsertOneAsync(purchase);
+            purchase.Status = "completed"; // Example status, can be changed based on business logic
+            await _purchaseRepository.CreatePurchaseAsync(purchase);
             return CreatedAtAction(nameof(GetPurchaseById), new { id = purchase.Id }, purchase);
         }
     }
