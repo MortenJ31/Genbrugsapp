@@ -1,146 +1,209 @@
 @page "/annonce"
 @using Core
 @inject HttpClient Http
-@using MongoDB.Bson;
-<h2 class="page-title">Manage Your Marketplace Ads</h2>
+
+<h2 class="page-title">Administrer og Find Annoncer</h2>
 
 <div class="action-buttons">
-    <button class="add-button" @onclick="AddNewAd">+ Add New Announcement</button>
+    <button class="add-button" @onclick="AddNewAd">+ Opret Ny Annonce</button>
 </div>
 
-@if (ads != null && ads.Any())
-{
-<div class="ads-container">
-    @foreach (var ad in ads)
-    {
-    <div class="ad-card">
-        <img src="@ad.ImageUrl" alt="Ad image" class="ad-image" />
-        <div class="ad-info">
-            <h3 class="ad-title">@ad.Title</h3>
-            <p class="ad-description">@ad.Description</p>
-            <p class="ad-price">@ad.Price.ToString("C")</p>
-            <span class="ad-status @ad.Status.ToLower()">@ad.Status</span>
-            <p class="ad-category">Category: @ad.CategoryId</p>
-            <p class="ad-location">Location: @ad.LocationId</p>
-        </div>
-        <div class="ad-actions">
-            <button class="edit-button" @onclick="() => EditAd(ad)">Edit</button>
-            <button class="delete-button" @onclick="() => DeleteAd(ad.Id)">Delete</button>
-        </div>
-    </div>
-    }
+<!-- Søgning og filtrering -->
+<div class="search-filter">
+    <input type="text" placeholder="Søg..." @bind="searchQuery" @bind:event="oninput" />
+    <select @bind="selectedCategory">
+        <option value="">-- Alle Kategorier --</option>
+        @foreach (var category in categories)
+        {
+            <option value="@category.Id">@category.Name</option>
+        }
+    </select>
+    <select @bind="selectedPriceRange">
+        <option value="">-- Alle Priser --</option>
+        <option value="low">Under 100 DKK</option>
+        <option value="mid">100 - 500 DKK</option>
+        <option value="high">Over 500 DKK</option>
+    </select>
 </div>
+
+<!-- Liste over filtrerede annoncer -->
+@if (filteredAds != null && filteredAds.Any())
+{
+    <div class="ads-container">
+        @foreach (var ad in filteredAds)
+        {
+            <div class="ad-card" @onclick="() => ShowAdDetails(ad)">
+                <img src="@ad.ImageUrl" alt="Ad image" class="ad-image" />
+                <div class="ad-info">
+                    <h3 class="ad-title">@ad.Title</h3>
+                    <p class="ad-price">@ad.Price.ToString("C")</p>
+                </div>
+                <div class="ad-actions">
+                    <button class="edit-button" @onclick="() => EditAd(ad)">Rediger</button>
+                    <button class="delete-button" @onclick="() => DeleteAd(ad.Id)">Slet</button>
+                </div>
+            </div>
+        }
+    </div>
 }
 else
 {
-<p class="no-ads-message">No ads available.</p>
+    <p class="no-ads-message">Ingen aktive annoncer tilgængelige.</p>
 }
 
+<!-- Detaljevisning af annoncer -->
+@if (selectedAd != null)
+{
+    <div class="ad-details-modal">
+        <div class="modal-content">
+            <span class="close-button" @onclick="CloseAdDetails">×</span>
+            <h3>@selectedAd.Title</h3>
+            <img src="@selectedAd.ImageUrl" alt="Ad image" class="modal-image" />
+            <p>@selectedAd.Description</p>
+            <p><strong>Pris:</strong> @selectedAd.Price.ToString("C")</p>
+            <p><strong>Lokation:</strong> @selectedAd.LocationName, @selectedAd.LocationAddress</p>
+            <p><strong>Status:</strong> @selectedAd.Status</p>
+        </div>
+    </div>
+}
+
+<!-- Formular til oprettelse og redigering af annoncer -->
 <EditForm Model="@currentAd" OnValidSubmit="SaveAd" class="edit-form">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
     <div class="form-group">
-        <label>Title:</label>
-        <InputText @bind-Value="currentAd.Title" class="form-control" />
+        <label>Titel:</label>
+        <InputText @bind-Value="currentAd.Title" class="form-control" placeholder="Indtast annoncentitel"/>
     </div>
     <div class="form-group">
-        <label>Description:</label>
-        <InputTextArea @bind-Value="currentAd.Description" class="form-control" />
+        <label>Beskrivelse:</label>
+        <InputTextArea @bind-Value="currentAd.Description" class="form-control" placeholder="Beskrivelse af varen"/>
     </div>
     <div class="form-group">
-        <label>Price:</label>
-        <InputNumber @bind-Value="currentAd.Price" class="form-control" />
+        <label>Pris:</label>
+        <InputNumber @bind-Value="currentAd.Price" class="form-control" placeholder="Angiv prisen i DKK"/>
     </div>
     <div class="form-group">
         <label>Status:</label>
         <InputSelect @bind-Value="currentAd.Status" class="form-control">
-            <option value="">-- Select Status --</option>
-            <option value="Active">Active</option>
-            <option value="Reserved">Reserved</option>
-            <option value="Sold">Sold</option>
-            <option value="Inactive">Inactive</option>
+            <option value="Active">Aktiv</option>
+            <option value="Reserved">Reserveret</option>
+            <option value="Sold">Solgt</option>
+            <option value="Inactive">Inaktiv</option>
         </InputSelect>
     </div>
     <div class="form-group">
-        <label>Image URL:</label>
-        <InputText @bind-Value="currentAd.ImageUrl" class="form-control" />
+        <label>Billede URL:</label>
+        <InputText @bind-Value="currentAd.ImageUrl" class="form-control" placeholder="URL til billede af varen"/>
     </div>
     <div class="form-group">
-        <label>Category:</label>
-        <InputText @bind-Value="currentAd.CategoryId" class="form-control" />
-    </div>
-    <div class="form-group">
-        <label>Location:</label>
-        <InputText @bind-Value="currentAd.LocationId" class="form-control" />
+        <label>Kategori:</label>
+        <InputSelect @bind-Value="currentAd.CategoryId" class="form-control">
+            <option value="">-- Vælg Kategori --</option>
+            @foreach (var category in categories)
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </InputSelect>
     </div>
 
-    <button type="submit" class="save-button">Save</button>
-    <button type="button" class="cancel-button" @onclick="CancelEdit">Cancel</button>
+    <div class="form-group">
+        <label>Lokationens Navn:</label>
+        <InputText @bind-Value="currentAd.LocationName" class="form-control" placeholder="F.eks. Campus Aarhus N" />
+    </div>
+    <div class="form-group">
+        <label>Lokationens Adresse:</label>
+        <InputText @bind-Value="currentAd.LocationAddress" class="form-control" placeholder="Indtast adresse" />
+    </div>
+
+    <button type="submit" class="save-button">Gem</button>
+    <button type="button" class="cancel-button" @onclick="CancelEdit">Annuller</button>
 </EditForm>
 
 @code {
-    private List<Ad>? ads = new List<Ad>();
+    private List<Ad> ads = new List<Ad>();
+    private List<Ad> filteredAds = new List<Ad>();
     private Ad currentAd = new Ad();
+    private Ad? selectedAd;
+    private bool isNewAd = true;
+    private string searchQuery = "";
+    private string selectedCategory = "";
+    private string selectedPriceRange = "";
+    private List<Category> categories = new List<Category>();
 
     protected override async Task OnInitializedAsync()
     {
-        ads = await Http.GetFromJsonAsync<List<Ad>>("http://localhost:5066/api/Ad");
+        categories = await Http.GetFromJsonAsync<List<Category>>("http://localhost:5066/api/Category") ?? new List<Category>();
+        ads = await Http.GetFromJsonAsync<List<Ad>>("http://localhost:5066/api/Ad") ?? new List<Ad>();
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        filteredAds = ads
+            .Where(ad => ad.Status == "Active" &&
+                         (string.IsNullOrEmpty(searchQuery) || ad.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) || ad.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)) &&
+                         (string.IsNullOrEmpty(selectedCategory) || ad.CategoryId == selectedCategory) &&
+                         (selectedPriceRange == "low" && ad.Price < 100 || selectedPriceRange == "mid" && ad.Price >= 100 && ad.Price <= 500 || selectedPriceRange == "high" && ad.Price > 500 || string.IsNullOrEmpty(selectedPriceRange)))
+            .ToList();
+    }
+
+    private void ShowAdDetails(Ad ad)
+    {
+        selectedAd = ad;
+    }
+
+    private void CloseAdDetails()
+    {
+        selectedAd = null;
     }
 
     private void AddNewAd()
     {
-        currentAd = new Ad { CreatedAt = DateTime.Now, Status = "Active" };
+        currentAd = new Ad
+        {
+            Title = "",
+            Description = "",
+            Price = 0.0,
+            Status = "Active",
+            ImageUrl = "",
+            CreatedAt = DateTime.UtcNow
+        };
+        isNewAd = true;
     }
 
     private void EditAd(Ad ad)
     {
-        currentAd = ad;
+        currentAd = ad ?? new Ad();
+        isNewAd = false;
     }
 
     private async Task SaveAd()
     {
-        // Sørg for, at Id er null for en ny annonce
-        if (string.IsNullOrWhiteSpace(currentAd.Id))
+        HttpResponseMessage response = isNewAd
+            ? await Http.PostAsJsonAsync("http://localhost:5066/api/Ad", currentAd)
+            : await Http.PutAsJsonAsync($"http://localhost:5066/api/Ad/{currentAd.Id}", currentAd);
+
+        if (response.IsSuccessStatusCode)
         {
-            currentAd.Id = null;
-
-            // Kontrollér og sæt kun gyldige ObjectId'er eller null
-            currentAd.UserId = IsValidObjectId(currentAd.UserId) ? currentAd.UserId : null;
-            currentAd.CategoryId = IsValidObjectId(currentAd.CategoryId) ? currentAd.CategoryId : null;
-            currentAd.LocationId = IsValidObjectId(currentAd.LocationId) ? currentAd.LocationId : null;
-
-            var response = await Http.PostAsJsonAsync("http://localhost:5066/api/Ad", currentAd);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                Console.WriteLine($"POST request failed with status code: {response.StatusCode}");
-                var errorContent = await response.Content.ReadAsStringAsync();
-                Console.WriteLine($"Error details: {errorContent}");
-            }
+            ads = await Http.GetFromJsonAsync<List<Ad>>("http://localhost:5066/api/Ad") ?? new List<Ad>();
+            ApplyFilters();
+            currentAd = new Ad();
+            isNewAd = true;
+            StateHasChanged();
         }
         else
         {
-            await Http.PutAsJsonAsync($"http://localhost:5066/api/Ad/{currentAd.Id}", currentAd);
+            Console.WriteLine($"Fejl: {await response.Content.ReadAsStringAsync()}");
         }
-
-        // Hent de opdaterede annoncer
-        ads = await Http.GetFromJsonAsync<List<Ad>>("http://localhost:5066/api/Ad");
-        currentAd = new Ad(); // Nulstil currentAd efter gem
     }
-
-// Helper-metode til at validere om en streng er en gyldig ObjectId
-    private bool IsValidObjectId(string? objectId)
-    {
-        return ObjectId.TryParse(objectId, out _);
-    }
-
-
 
     private async Task DeleteAd(string id)
     {
         await Http.DeleteAsync($"http://localhost:5066/api/Ad/{id}");
-        ads = await Http.GetFromJsonAsync<List<Ad>>("http://localhost:5066/api/Ad");
+        ads = await Http.GetFromJsonAsync<List<Ad>>("http://localhost:5066/api/Ad") ?? new List<Ad>();
+        ApplyFilters();
     }
 
     private void CancelEdit()

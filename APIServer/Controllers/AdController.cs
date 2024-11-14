@@ -1,7 +1,7 @@
-﻿using APIServer.Services;
+﻿using APIServer.Repositories;
 using Core;
 using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
+using System.Threading.Tasks;
 
 namespace APIServer.Controllers
 {
@@ -9,18 +9,20 @@ namespace APIServer.Controllers
     [Route("api/[controller]")]
     public class AdController : ControllerBase
     {
-        private readonly MongoDbService _mongoDbService;
+        private readonly IAdRepository _adRepository;
+        private readonly ILocationRepository _locationRepository;
 
-        public AdController(MongoDbService mongoDbService)
+        public AdController(IAdRepository adRepository, ILocationRepository locationRepository)
         {
-            _mongoDbService = mongoDbService;
+            _adRepository = adRepository;
+            _locationRepository = locationRepository;
         }
 
         // GET: api/Ad
         [HttpGet]
         public async Task<IActionResult> GetAllAds()
         {
-            var ads = await _mongoDbService.Ads.Find(_ => true).ToListAsync();
+            var ads = await _adRepository.GetAllAdsAsync();
             return Ok(ads);
         }
 
@@ -28,7 +30,7 @@ namespace APIServer.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetAdById(string id)
         {
-            var ad = await _mongoDbService.Ads.Find(a => a.Id == id).FirstOrDefaultAsync();
+            var ad = await _adRepository.GetAdByIdAsync(id);
             if (ad == null) return NotFound();
             return Ok(ad);
         }
@@ -37,8 +39,17 @@ namespace APIServer.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateAd([FromBody] Ad ad)
         {
+            // Simpel tilføjelse af CreatedAt
             ad.CreatedAt = DateTime.UtcNow;
-            await _mongoDbService.Ads.InsertOneAsync(ad);
+
+            // Tilføj Location hvis det er angivet
+            if (!string.IsNullOrEmpty(ad.LocationAddress))
+            {
+                var location = await GetOrCreateLocationAsync(ad.LocationAddress);
+                ad.LocationId = location.Id;
+            }
+
+            await _adRepository.AddAdAsync(ad);
             return CreatedAtAction(nameof(GetAdById), new { id = ad.Id }, ad);
         }
 
@@ -46,8 +57,21 @@ namespace APIServer.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateAd(string id, [FromBody] Ad updatedAd)
         {
-            var result = await _mongoDbService.Ads.ReplaceOneAsync(a => a.Id == id, updatedAd);
-            if (result.MatchedCount == 0) return NotFound();
+            var existingAd = await _adRepository.GetAdByIdAsync(id);
+            if (existingAd == null) return NotFound();
+
+            // Kopiér felter fra updatedAd til existingAd
+            existingAd.Title = updatedAd.Title;
+            existingAd.Description = updatedAd.Description;
+            existingAd.Price = updatedAd.Price;
+            existingAd.Status = updatedAd.Status;
+            existingAd.ImageUrl = updatedAd.ImageUrl;
+            existingAd.CategoryId = updatedAd.CategoryId;
+            existingAd.LocationId = updatedAd.LocationId;
+            existingAd.LocationName = updatedAd.LocationName;
+            existingAd.LocationAddress = updatedAd.LocationAddress;
+
+            await _adRepository.UpdateAdAsync(id, existingAd);
             return NoContent();
         }
 
@@ -55,9 +79,26 @@ namespace APIServer.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteAd(string id)
         {
-            var result = await _mongoDbService.Ads.DeleteOneAsync(a => a.Id == id);
-            if (result.DeletedCount == 0) return NotFound();
+            var existingAd = await _adRepository.GetAdByIdAsync(id);
+            if (existingAd == null) return NotFound();
+
+            await _adRepository.DeleteAdAsync(id);
             return NoContent();
+        }
+
+        private async Task<Location> GetOrCreateLocationAsync(string locationAddress)
+        {
+            var locations = await _locationRepository.GetAllLocationsAsync();
+            var existingLocation = locations?.FirstOrDefault(loc => loc.Address == locationAddress);
+
+            if (existingLocation == null)
+            {
+                var newLocation = new Location { Name = locationAddress, Address = locationAddress };
+                await _locationRepository.AddLocationAsync(newLocation);
+                return newLocation;
+            }
+
+            return existingLocation;
         }
     }
 }
