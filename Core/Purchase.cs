@@ -27,5 +27,16 @@ namespace Core
         [BsonElement("locationId")]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? LocationId { get; set; }
+        
+     
+      
+        public bool IsSelected { get; set; }
+        
+        [BsonElement("itemName")]
+        public string ItemName { get; set; }
+
+        [BsonElement("price")]
+        public decimal Price { get; set; }
+
     }
 }

@@ -1,5 +1,5 @@
 @page "/purchases"
-@using Core;
+@using Core
 
 @inject HttpClient HttpClient
     
@@ -66,8 +66,8 @@
 </div>
 
 @code {
-    private List<Purchase> selectedPurchases = new List<Purchase>(); // Liste over nye varer
-    private List<Purchase> confirmedPurchases = new List<Purchase>(); // Liste over bekræftede køb
+    private List<Core.Purchase> selectedPurchases = new List<Core.Purchase>(); // Liste over nye varer
+    private List<Core.Purchase> confirmedPurchases = new List<Core.Purchase>(); // Liste over bekræftede køb
 
     protected override async Task OnInitializedAsync()
     {
@@ -78,19 +78,19 @@
     private async Task LoadSelectedPurchases()
     {
         // Hent valgte varer (simuleret data)
-        selectedPurchases = new List<Purchase>
+        selectedPurchases = new List<Core.Purchase>
         {
-            new Purchase { Id = 1, ItemName = "Laptop", Price = 7999.99M, PurchaseDate = DateTime.Now.AddDays(-3) },
-            new Purchase { Id = 2, ItemName = "Smartphone", Price = 4999.99M, PurchaseDate = DateTime.Now.AddDays(-10) }
+            new Core.Purchase { Id = 1, ItemName = "Laptop", Price = 7999.99M, PurchaseDate = DateTime.Now.AddDays(-3) },
+            new Core.Purchase { Id = 2, ItemName = "Smartphone", Price = 4999.99M, PurchaseDate = DateTime.Now.AddDays(-10) }
         };
     }
 
     private async Task LoadConfirmedPurchases()
     {
         // Simuler indlæsning af tidligere bekræftede køb, f.eks. fra en database
-        confirmedPurchases = new List<Purchase>
+        confirmedPurchases = new List<Core.Purchase>
         {
-            new Purchase { Id = 3, ItemName = "Headphones", Price = 999.99M, PurchaseDate = DateTime.Now.AddDays(-15) }
+            new Core.Purchase { Id = 3, ItemName = "Headphones", Price = 999.99M, PurchaseDate = DateTime.Now.AddDays(-15) }
         };
     }
 
