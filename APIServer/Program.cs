@@ -1,8 +1,10 @@
 using APIServer.Model;
 using Microsoft.Extensions.Options;
 using MongoDB.Driver;
+using APIServer.Repositories;
 using APIServer.Services;
 using Core;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,14 +14,28 @@ builder.Services.AddControllers();
 // Tilføj MongoDB-indstillinger fra appsettings.json
 builder.Services.Configure<MongoDbSettings>(builder.Configuration.GetSection("MongoDbSettings"));
 
-// Registrer MongoClient som singleton, så vi kan bruge den i vores services
+// Registrer MongoClient som singleton
 builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 {
     var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
     return new MongoClient(settings.ConnectionString);
 });
 
+// Registrér IMongoDatabase baseret på MongoDbSettings
+builder.Services.AddSingleton<IMongoDatabase>(sp =>
+{
+    var client = sp.GetRequiredService<IMongoClient>();
+    var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
+    return client.GetDatabase(settings.DatabaseName);
+});
+
+// Registrer MongoDbService, hvis det bruges andre steder
 builder.Services.AddSingleton<MongoDbService>();
+
+// Registrér IAdRepository med AdRepositoryMongoDB som implementering
+builder.Services.AddSingleton<IAdRepository, AdRepositoryMongoDB>();
+builder.Services.AddSingleton<ILocationRepository, LocationRepositoryMongoDB>();
+builder.Services.AddSingleton<ICategoryRepository, CategoryRepositoryMongoDB>();
 
 // Konfigurer CORS til at tillade kun Blazor-klientens URL
 builder.Services.AddCors(options =>
@@ -37,7 +53,11 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
