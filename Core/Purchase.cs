@@ -27,5 +27,11 @@ namespace Core
         [BsonElement("locationId")]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? LocationId { get; set; }
+
+        [BsonIgnore] // Dette vil ikke blive gemt i databasen
+        public bool IsSelected { get; set; } = false;
+
+        [BsonElement("price")]
+        public decimal Price { get; set; }
     }
 }

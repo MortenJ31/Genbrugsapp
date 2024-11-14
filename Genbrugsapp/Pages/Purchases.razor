@@ -1,8 +1,8 @@
 @page "/purchases"
-@using Core;
-
+@using Core
 @inject HttpClient HttpClient
-    
+@inject AuthenticationStateProvider AuthStateProvider
+
 <link href="css/Purchases.css" rel="stylesheet">
 
 <div class="purchases-container">
@@ -17,20 +17,19 @@
                 @foreach (var purchase in selectedPurchases)
                 {
                     <li>
-                        <!-- Checkbox til valg af køb -->
                         <input type="checkbox" @bind="purchase.IsSelected" />
                         @purchase.PurchaseDate.ToShortDateString(): @purchase.ItemName - @purchase.Price.ToString("C")
+                        <button @onclick="() => EditPurchase(purchase)">Rediger</button>
+                        <button @onclick="() => DeletePurchase(purchase)">Slet</button>
                     </li>
                 }
             </ul>
 
-            <!-- Vis totalen af de valgte varer -->
             <div>
                 <strong>Total for valgte varer: </strong>
                 @($"{selectedPurchases.Where(p => p.IsSelected).Sum(p => p.Price):C}")
             </div>
 
-            <!-- Knapper til godkendelse og annullering af valgte køb -->
             <button @onclick="ApproveSelectedPurchases" class="approve-button">Godkend Valgte Køb</button>
             <button class="cancel-button" @onclick="CancelSelectedPurchases">Annuller Valgte Køb</button>
         }
@@ -48,11 +47,14 @@
             <ul>
                 @foreach (var purchase in confirmedPurchases)
                 {
-                    <li>@purchase.PurchaseDate.ToShortDateString(): @purchase.ItemName - @purchase.Price.ToString("C")</li>
+                    <li>
+                        @purchase.PurchaseDate.ToShortDateString(): @purchase.ItemName - @purchase.Price.ToString("C")
+                        <button @onclick="() => EditPurchase(purchase)">Rediger</button>
+                        <button @onclick="() => DeletePurchase(purchase)">Slet</button>
+                    </li>
                 }
             </ul>
 
-            <!-- Vis totalen af de bekræftede køb -->
             <div>
                 <strong>Total for bekræftede køb: </strong>
                 @($"{confirmedPurchases.Sum(p => p.Price):C}")
@@ -63,56 +65,105 @@
             <p>Ingen bekræftede køb endnu.</p>
         }
     </div>
+
+    <!-- Formular til oprettelse/redigering af et køb -->
+    <div class="purchase-form">
+        <h4>@(editMode ? "Rediger Køb" : "Opret Nyt Køb")</h4>
+        <input placeholder="Varenavn" @bind="purchaseForm.ItemName" />
+        <input placeholder="Pris" @bind="purchaseForm.Price" type="number" />
+        <button @onclick="SavePurchase">@((editMode ? "Gem Ændringer" : "Opret Køb"))</button>
+        <button @onclick="CancelEdit">Annuller</button>
+    </div>
 </div>
 
 @code {
-    private List<Purchase> selectedPurchases = new List<Purchase>(); // Liste over nye varer
-    private List<Purchase> confirmedPurchases = new List<Purchase>(); // Liste over bekræftede køb
+    private List<Purchase> selectedPurchases = new List<Purchase>();
+    private List<Purchase> confirmedPurchases = new List<Purchase>();
+    private Purchase purchaseForm = new Purchase();
+    private bool editMode = false;
+    private string userId;
 
     protected override async Task OnInitializedAsync()
     {
-        await LoadSelectedPurchases();
-        await LoadConfirmedPurchases();
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        userId = authState.User.FindFirst(c => c.Type == "sub")?.Value;
+
+        await LoadUserPurchases();
     }
 
-    private async Task LoadSelectedPurchases()
+    private async Task LoadUserPurchases()
     {
-        // Hent valgte varer (simuleret data)
-        selectedPurchases = new List<Purchase>
-        {
-            new Purchase { Id = 1, ItemName = "Laptop", Price = 7999.99M, PurchaseDate = DateTime.Now.AddDays(-3) },
-            new Purchase { Id = 2, ItemName = "Smartphone", Price = 4999.99M, PurchaseDate = DateTime.Now.AddDays(-10) }
-        };
-    }
-
-    private async Task LoadConfirmedPurchases()
-    {
-        // Simuler indlæsning af tidligere bekræftede køb, f.eks. fra en database
-        confirmedPurchases = new List<Purchase>
-        {
-            new Purchase { Id = 3, ItemName = "Headphones", Price = 999.99M, PurchaseDate = DateTime.Now.AddDays(-15) }
-        };
+        var purchases = await HttpClient.GetFromJsonAsync<List<Purchase>>($"api/purchase?userId={userId}");
+        selectedPurchases = purchases.Where(p => p.Status == "pending").ToList();
+        confirmedPurchases = purchases.Where(p => p.Status == "confirmed").ToList();
     }
 
     private async Task ApproveSelectedPurchases()
     {
-        // Find de valgte varer (dem med IsSelected = true)
         var selectedForConfirmation = selectedPurchases.Where(p => p.IsSelected).ToList();
 
         if (selectedForConfirmation.Any())
         {
-            // Flyt de valgte varer til "confirmedPurchases" og fjern dem fra "selectedPurchases"
-            confirmedPurchases.AddRange(selectedForConfirmation);
-            selectedPurchases = selectedPurchases.Except(selectedForConfirmation).ToList();
+            foreach (var purchase in selectedForConfirmation)
+            {
+                purchase.Status = "confirmed";
+                await HttpClient.PatchAsync($"api/purchase/{purchase.Id}/status", JsonContent.Create("confirmed"));
+            }
 
-            // Send data til backend for at gemme købet som bekræftet (simuleret)
-            await HttpClient.PostAsJsonAsync("api/purchases/confirm", selectedForConfirmation);
+            selectedPurchases = selectedPurchases.Except(selectedForConfirmation).ToList();
+            confirmedPurchases.AddRange(selectedForConfirmation);
         }
     }
 
     private void CancelSelectedPurchases()
     {
-        // Find og fjern de valgte varer fra "selectedPurchases" (dem med IsSelected = true)
         selectedPurchases = selectedPurchases.Where(p => !p.IsSelected).ToList();
+    }
+
+    private async Task DeletePurchase(Purchase purchase)
+    {
+        await HttpClient.DeleteAsync($"api/purchase/{purchase.Id}");
+        selectedPurchases.Remove(purchase);
+        confirmedPurchases.Remove(purchase);
+    }
+
+    private void EditPurchase(Purchase purchase)
+    {
+        purchaseForm = new Purchase
+            {
+                Id = purchase.Id,
+                ItemName = purchase.ItemName,
+                Price = purchase.Price,
+                PurchaseDate = purchase.PurchaseDate,
+                Status = purchase.Status,
+                UserId = purchase.UserId
+            };
+        editMode = true;
+    }
+
+    private async Task SavePurchase()
+    {
+        if (editMode)
+        {
+            await HttpClient.PutAsJsonAsync($"api/purchase/{purchaseForm.Id}", purchaseForm);
+        }
+        else
+        {
+            purchaseForm.UserId = userId;
+            purchaseForm.PurchaseDate = DateTime.UtcNow;
+            purchaseForm.Status = "pending";
+            await HttpClient.PostAsJsonAsync("api/purchase", purchaseForm);
+            selectedPurchases.Add(purchaseForm);
+        }
+
+        purchaseForm = new Purchase();
+        editMode = false;
+        await LoadUserPurchases();
+    }
+
+    private void CancelEdit()
+    {
+        purchaseForm = new Purchase();
+        editMode = false;
     }
 }
