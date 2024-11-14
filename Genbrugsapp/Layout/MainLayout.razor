@@ -1,7 +1,12 @@
 ﻿@inherits LayoutComponentBase
-<div class="page">
-    <div class="sidebar">
+@inject NavigationManager NavManager
+
+<div class="page @(NavManager.Uri.EndsWith("/") ? "login-background" : "default-background")">
+    <div class="sidebar" >
+        @if (!NavManager.Uri.EndsWith("/"))
+        {
         <NavMenu />
+        }
     </div>
 
     <main>
