@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using MongoDB.Driver;
 using APIServer.Services;
 using Core;
+using APIServer.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,12 +22,14 @@ builder.Services.AddSingleton<IMongoClient, MongoClient>(sp =>
 
 builder.Services.AddSingleton<MongoDbService>();
 
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+
 // Konfigurer CORS til at tillade kun Blazor-klientens URL
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("policy", policy =>
+    options.AddPolicy("AllowBlazorClient", policy =>
     {
-        policy.WithOrigins("http://localhost:5176") // Porten til din Blazor WebAssembly-app
+        policy.WithOrigins("https://localhost:7251") // Porten til din Blazor WebAssembly-app
             .AllowAnyHeader()
             .AllowAnyMethod();
     });
@@ -47,10 +50,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
-app.UseCors("policy"); // Anvend CORS-politikken
-app.UseAuthorization();
+app.UseCors("AllowBlazorClient"); // Anvend CORS-politikken
 
+app.UseHttpsRedirection();
+app.UseAuthorization();
 app.MapControllers();
 
 app.Run();

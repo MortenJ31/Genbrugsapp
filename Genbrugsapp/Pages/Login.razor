@@ -1,14 +1,8 @@
 ﻿@page "/"
-@* {target:alpha} *@
 @using Genbrugsapp.Service
-
 @inject ILoginService loginService
 @inject NavigationManager navManager
 @inject AuthenticationStateProvider AuthStateProvider
-@* @inject CustomAuthStateProvider AuthStateProvider
- *@
-
-
 
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
     <div class="row bg-light shadow-lg p-4 rounded w-100">
@@ -27,26 +21,54 @@
             </div>
         </div>
 
-        <!-- Højre kolonne med login form -->
-        <div class="col-md-6 d-flex flex-column justify-content-center bg-white p-4 rounded shadow-sm">
+        <!-- Højre kolonne med login og register form -->
+        <div class="col-md-6 d-flex flex-column bg-white p-4 rounded shadow-sm">
             <h3 class="text-center text-success mb-4">🌍 Login</h3>
+
+            <!-- Login Form -->
+            <div>
+                <div class="mb-3">
+                    <label for="username" class="form-label">Brugernavn:</label>
+                    <InputText id="username" @bind-Value="username" placeholder="Indtast brugernavn..." class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password:</label>
+                    <InputText id="password" @bind-Value="password" type="password" placeholder="Indtast password..." class="form-control" />
+                </div>
+                <div class="d-flex justify-content-end mb-3">
+                    <button @onclick="OnClickLogin" class="btn btn-success w-100">Login</button>
+                </div>
+                @if (!string.IsNullOrEmpty(errorText))
+                {
+                    <div class="text-danger text-center">
+                        <span>@errorText</span>
+                    </div>
+                }
+            </div>
+
+            <hr />
+
+            <!-- Registration Form -->
+            <h3 class="text-center text-success mb-4">🌍 Registrér</h3>
             <div class="mb-3">
-                <label for="username" class="form-label">Brugernavn:</label>
-                <InputText id="username" @bind-Value="username"
-                           placeholder="Indtast brugernavn..." class="form-control" />
+                <label for="registerUsername" class="form-label">Brugernavn:</label>
+                <InputText id="registerUsername" @bind-Value="newUser.Username" placeholder="Indtast brugernavn..." class="form-control" />
             </div>
             <div class="mb-3">
-                <label for="password" class="form-label">Password:</label>
-                <InputText id="password" @bind-Value="password" type="password"
-                           placeholder="Indtast password..." class="form-control" />
+                <label for="registerPassword" class="form-label">Password:</label>
+                <InputText id="registerPassword" @bind-Value="newUser.Password" type="password" placeholder="Indtast password..." class="form-control" />
+            </div>
+            <div class="mb-3">
+                <label for="registerEmail" class="form-label">Email:</label>
+                <InputText id="registerEmail" @bind-Value="newUser.Email" placeholder="Indtast email..." class="form-control" />
             </div>
             <div class="d-flex justify-content-end mb-3">
-                <button @onclick="OnClickLogin" class="btn btn-success w-100">Login</button>
+                <button @onclick="OnClickRegister" class="btn btn-primary w-100">Registrér</button>
             </div>
-            @if (!string.IsNullOrEmpty(errorText))
+            @if (!string.IsNullOrEmpty(registerErrorText))
             {
                 <div class="text-danger text-center">
-                    <span>@errorText</span>
+                    <span>@registerErrorText</span>
                 </div>
             }
         </div>
@@ -58,23 +80,34 @@
     private string password = "";
     private string errorText = "";
 
-    [Parameter]
-    public string target { get; set; }
+    private User newUser = new User();
+    private string registerErrorText = "";
 
     private async Task OnClickLogin()
     {
         var success = await loginService.Login(username, password);
         if (success)
         {
-            var customAuthProvider = (CustomAuthStateProvider)AuthStateProvider;
-            var user = await loginService.GetUserLoggedIn();
-            customAuthProvider.MarkUserAsAuthenticated(user);
-
-            navManager.NavigateTo("/home"); // Naviger til forsiden eller en anden beskyttet side
+            navManager.NavigateTo("/home"); // Navigér til forsiden eller en anden beskyttet side
         }
         else
         {
             errorText = "Forkert kombination. Prøv igen.";
+        }
+    }
+
+    private async Task OnClickRegister()
+    {
+        var success = await loginService.RegisterUser(newUser);
+        if (success)
+        {
+            // Navigér til login siden eller giv feedback om registreringssucces
+            registerErrorText = "";
+            navManager.NavigateTo("/"); // Navigér tilbage til login siden
+        }
+        else
+        {
+            registerErrorText = "Brugernavnet er allerede i brug.";
         }
     }
 }

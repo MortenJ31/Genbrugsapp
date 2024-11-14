@@ -11,5 +11,7 @@ namespace Genbrugsapp.Service
         // If user is valid the function will return true and the
         // user is set to be logged in.
         Task<bool> Login(string username, string password);
+
+        Task<bool> RegisterUser(User newUser);
     }
 }
