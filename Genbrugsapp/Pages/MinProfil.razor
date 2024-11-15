@@ -1,0 +1,118 @@
+@page "/profil"
+@using Core 
+@inject HttpClient HttpClient
+
+<h3>Profil-siden</h3>
+
+
+@code {
+
+    private class Profile(string brugernavn, string linkTilBilledeJpg, int i, string bioOmBrugeren, string lokation)
+    {
+        public object Name { get; set; }
+        public object Age { get; set; }
+        public object Bio { get; set; }
+        public object Location { get; set; }
+        public object ProfilePicture { get; set; }
+    }
+
+    private Profile userProfile = new Profile("Brugernavn", "link_til_billede.jpg", 25, "Bio om brugeren", "Lokation");
+
+    
+    private Ad currentAd = new Ad
+    {
+        Title = "Sample Ad",
+        Description = "Sample Description",
+        Price = 100.00m,
+        Status = "Active", 
+        ImageUrl = "https://example.com/sample-image.jpg"
+    };
+
+    private List<Category> categories = new List<Category>
+    {
+        new Category { Id = 1, Name = "Electronics" },
+        new Category { Id = 2, Name = "Furniture" }
+    };
+
+    private List<Location> locations = new List<Location>
+    {
+        new Location { Id = 1, Name = "Copenhagen" },
+        new Location { Id = 2, Name = "Aarhus" },
+        new Location { Id = 3, Name = "Vejle" },
+        new Location { Id = 4, Name = "Kodling" }
+    };
+
+    private void SaveAd(EditContext context)
+    {
+        
+        Console.WriteLine($"Ad saved: {currentAd.Title}");
+    }
+
+    private void CancelEdit()
+    {
+        
+        Console.WriteLine("Editing canceled.");
+    }
+}
+
+<div>
+    <h4>Navn: @userProfile.Name</h4>
+    <p>Alder: @userProfile.Age</p>
+    <p>Bio: @userProfile.Bio</p>
+    <p>Lokation: @userProfile.Location</p>
+    <img src="@userProfile.ProfilePicture" alt="Profil billede" style="width: 100px; height: 100px;" />
+</div>
+
+<EditForm Model="@currentAd" OnValidSubmit="SaveAd" class="edit-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label>Titel:</label>
+        <InputText @bind-Value="currentAd.Title" class="form-control" placeholder="Indtast annoncentitel"/>
+    </div>
+    <div class="form-group">
+        <label>Beskrivelse:</label>
+        <InputTextArea @bind-Value="currentAd.Description" class="form-control" placeholder="Beskrivelse af varen"/>
+    </div>
+    <div class="form-group">
+        <label>Pris:</label>
+        <InputNumber @bind-Value="currentAd.Price" class="form-control" placeholder="Angiv prisen i DKK"/>
+    </div>
+    <div class="form-group">
+        <label>Status:</label>
+        <InputSelect @bind-Value="currentAd.Status" class="form-control">
+            <option value="Active">Aktiv</option>
+            <option value="Reserved">Reserveret</option>
+            <option value="Sold">Solgt</option>
+            <option value="Inactive">Inaktiv</option>
+        </InputSelect>
+    </div>
+    <div class="form-group">
+        <label>Billede URL:</label>
+        <InputText @bind-Value="currentAd.ImageUrl" class="form-control" placeholder="URL til billede af varen"/>
+    </div>
+    <div class="form-group">
+        <label>Kategori:</label>
+        <InputSelect @bind-Value="currentAd.CategoryId" class="form-control">
+            <option value="">-- Vælg Kategori --</option>
+            @foreach (var category in categories)
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </InputSelect>
+    </div>
+    <div class="form-group">
+        <label>Lokation:</label>
+        <InputSelect @bind-Value="currentAd.LocationId" class="form-control">
+            <option value="">-- Vælg Lokation --</option>
+            @foreach (var location in locations)
+            {
+                <option value="@location.Id">@location.Name</option> <!-- Location dropdown selection -->
+            }
+        </InputSelect>
+    </div>
+
+    <button type="submit" class="save-button">Gem</button>
+    <button type="button" class="cancel-button" @onclick="CancelEdit">Annuller</button>
+</EditForm>
