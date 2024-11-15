@@ -94,7 +94,7 @@ else
         // Populate each ad's Location property with the corresponding location object
         foreach (var ad in ads)
         {
-            if (!string.IsNullOrEmpty(ad.LocationId) && locationMap.TryGetValue(ad.LocationId, out var location))
+            if (!string.IsNullOrEmpty(ad.LocationId) && locationMap.TryGetValue(Ad.LocationId, out var location))
             {
                 ad.Location = location;
             }

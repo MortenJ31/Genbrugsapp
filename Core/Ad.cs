@@ -18,7 +18,7 @@ namespace Core
 
         [BsonElement("description")] public string Description { get; set; }
 
-        [BsonElement("price")] public double Price { get; set; }
+        [BsonElement("price")] public decimal Price { get; set; }
 
         [BsonElement("status")] public string Status { get; set; }
 

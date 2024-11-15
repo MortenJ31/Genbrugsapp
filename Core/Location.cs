@@ -9,7 +9,7 @@ namespace Core
         [BsonRepresentation(BsonType.ObjectId)]
         [BsonIgnoreIfDefault] 
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
-        public string? Id { get; set; }  // Gør Id nullable
+        public int Id { get; set; }  // Gør Id nullable
 
         [BsonElement("name")]
         public string Name { get; set; }
