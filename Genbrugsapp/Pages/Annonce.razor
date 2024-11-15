@@ -6,23 +6,20 @@
 
 <div class="action-buttons">
     <button class="add-button" @onclick="AddNewAd">+ Opret Ny Annonce</button>
+    <button class="reset-button" @onclick="ResetFilters">Nulstil Filter</button>
 </div>
 
 <!-- Søgning og filtrering -->
 <div class="search-filter">
-    <input type="text" placeholder="Søg..." @bind="searchQuery" @bind:event="oninput" />
-    <select @bind="selectedCategory">
-        <option value="">-- Alle Kategorier --</option>
+    <input type="text" placeholder="Søg efter titel..." @oninput="@(e => OnSearchChanged(e))" class="form-control search-input" />
+    <input type="number" placeholder="Minimum Pris" @oninput="@(e => OnPriceChanged(e, "min"))" class="form-control price-input" />
+    <input type="number" placeholder="Maksimum Pris" @oninput="@(e => OnPriceChanged(e, "max"))" class="form-control price-input" />
+    
+    <select multiple @onchange="OnCategoryChange" class="form-control category-select">
         @foreach (var category in categories)
         {
             <option value="@category.Id">@category.Name</option>
         }
-    </select>
-    <select @bind="selectedPriceRange">
-        <option value="">-- Alle Priser --</option>
-        <option value="low">Under 100 DKK</option>
-        <option value="mid">100 - 500 DKK</option>
-        <option value="high">Over 500 DKK</option>
     </select>
 </div>
 
@@ -36,11 +33,11 @@
                 <img src="@ad.ImageUrl" alt="Ad image" class="ad-image" />
                 <div class="ad-info">
                     <h3 class="ad-title">@ad.Title</h3>
-                    <p class="ad-price">@ad.Price.ToString("C")</p>
+                    <p class="ad-price">@ad.Price.ToString("N2") kr</p>
                 </div>
                 <div class="ad-actions">
                     <button class="edit-button" @onclick="() => EditAd(ad)">Rediger</button>
-                    <button class="delete-button" @onclick="() => DeleteAd(ad.Id)">Slet</button>
+                    <button class="delete-button" @onclick="() => DeleteAd(ad.Id ?? string.Empty)">Slet</button>
                 </div>
             </div>
         }
@@ -60,119 +57,100 @@ else
             <h3>@selectedAd.Title</h3>
             <img src="@selectedAd.ImageUrl" alt="Ad image" class="modal-image" />
             <p>@selectedAd.Description</p>
-            <p><strong>Pris:</strong> @selectedAd.Price.ToString("C")</p>
-            <p><strong>Lokation:</strong> @selectedAd.Location?.Name, @selectedAd.Location?.Address</p> <!-- Updated location display -->
-            <p><strong>Status:</strong> @selectedAd.Status</p>
+            <p><strong>Pris:</strong> @selectedAd?.Price.ToString("N2") kr</p>
+            <p><strong>Lokation:</strong> @(selectedAd?.Location?.Classroom ?? "Ikke angivet"), @(selectedAd?.Location?.Address ?? "Ikke angivet")</p>
+            <p><strong>Status:</strong> @selectedAd?.Status</p>
         </div>
     </div>
 }
 
-<!-- Formular til oprettelse og redigering af annoncer -->
-
-
 @code {
-    private List<Ad> ads = new List<Ad>();
     private List<Ad> filteredAds = new List<Ad>();
-    private Ad currentAd = new Ad();
     private Ad? selectedAd;
-    private bool isNewAd = true;
     private string searchQuery = "";
-    private string selectedCategory = "";
-    private string selectedPriceRange = "";
+    private double? minPrice;
+    private double? maxPrice;
+    private List<string> selectedCategories = new List<string>();
     private List<Category> categories = new List<Category>();
-    private List<Location> locations = new List<Location>(); // New list to hold all locations
 
     protected override async Task OnInitializedAsync()
     {
         categories = await Http.GetFromJsonAsync<List<Category>>("http://localhost:5066/api/Category") ?? new List<Category>();
-        ads = await Http.GetFromJsonAsync<List<Ad>>("http://localhost:5066/api/Ad") ?? new List<Ad>();
+        await LoadFilteredAds();
+    }
 
-        // Fetch all locations
-        locations = await Http.GetFromJsonAsync<List<Location>>("http://localhost:5066/api/Location") ?? new List<Location>();
-        var locationMap = locations.ToDictionary(loc => loc.Id);
+    private async Task LoadFilteredAds()
+    {
+        var uri = $"http://localhost:5066/api/Ad/filter?";
+        var parameters = new List<string>();
 
-        // Populate each ad's Location property with the corresponding location object
-        foreach (var ad in ads)
+        if (!string.IsNullOrEmpty(searchQuery)) parameters.Add($"searchQuery={searchQuery}");
+        if (minPrice.HasValue) parameters.Add($"minPrice={minPrice}");
+        if (maxPrice.HasValue) parameters.Add($"maxPrice={maxPrice}");
+        if (selectedCategories.Any()) parameters.Add($"categoryId={string.Join(",", selectedCategories)}");
+
+        uri += string.Join("&", parameters);
+
+        try
         {
-            if (!string.IsNullOrEmpty(ad.LocationId) && locationMap.TryGetValue(ad.LocationId, out var location))
-            {
-                ad.Location = location;
-            }
+            filteredAds = await Http.GetFromJsonAsync<List<Ad>>(uri) ?? new List<Ad>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading filtered ads: {ex.Message}");
         }
 
-        ApplyFilters();
+        StateHasChanged();
     }
 
-    private void ApplyFilters()
+    private async Task ResetFilters()
     {
-        filteredAds = ads
-            .Where(ad => ad.Status == "Active" &&
-                         (string.IsNullOrEmpty(searchQuery) || ad.Title.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) || ad.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)) &&
-                         (string.IsNullOrEmpty(selectedCategory) || ad.CategoryId == selectedCategory) &&
-                         (selectedPriceRange == "low" && ad.Price < 100 || selectedPriceRange == "mid" && ad.Price >= 100 && ad.Price <= 500 || selectedPriceRange == "high" && ad.Price > 500 || string.IsNullOrEmpty(selectedPriceRange)))
-            .ToList();
+        searchQuery = string.Empty;
+        minPrice = null;
+        maxPrice = null;
+        selectedCategories.Clear();
+        await LoadFilteredAds();
     }
 
-    private void ShowAdDetails(Ad ad)
+    private async Task OnSearchChanged(ChangeEventArgs e)
     {
-        selectedAd = ad;
+        searchQuery = e.Value?.ToString() ?? string.Empty;
+        await LoadFilteredAds();
     }
 
-    private void CloseAdDetails()
+    private async Task OnPriceChanged(ChangeEventArgs e, string type)
     {
-        selectedAd = null;
-    }
-
-    private void AddNewAd()
-    {
-        
-        currentAd = new Ad
+        if (double.TryParse(e.Value?.ToString(), out double value))
         {
-            Title = "",
-            Description = "",
-            Price = 0.0,
-            Status = "Active",
-            ImageUrl = "",
-            CreatedAt = DateTime.UtcNow
-        };
-        isNewAd = true;
-    }
-
-    private void EditAd(Ad ad)
-    {
-        currentAd = ad ?? new Ad();
-        isNewAd = false;
-    }
-
-    private async Task SaveAd()
-    {
-        HttpResponseMessage response = isNewAd
-            ? await Http.PostAsJsonAsync("http://localhost:5066/api/Ad", currentAd)
-            : await Http.PutAsJsonAsync($"http://localhost:5066/api/Ad/{currentAd.Id}", currentAd);
-
-        if (response.IsSuccessStatusCode)
-        {
-            ads = await Http.GetFromJsonAsync<List<Ad>>("http://localhost:5066/api/Ad") ?? new List<Ad>();
-            ApplyFilters();
-            currentAd = new Ad();
-            isNewAd = true;
-            StateHasChanged();
+            if (type == "min") minPrice = value;
+            else maxPrice = value;
+            await LoadFilteredAds();
         }
         else
         {
-            Console.WriteLine($"Fejl: {await response.Content.ReadAsStringAsync()}");
+            if (type == "min") minPrice = null;
+            else maxPrice = null;
+            await LoadFilteredAds();
         }
     }
 
-    private async Task DeleteAd(string id)
+    private async Task OnCategoryChange(ChangeEventArgs e)
     {
-        await Http.DeleteAsync($"http://localhost:5066/api/Ad/{id}");
-        ads = await Http.GetFromJsonAsync<List<Ad>>("http://localhost:5066/api/Ad") ?? new List<Ad>();
-        ApplyFilters();
+        selectedCategories = ((IEnumerable<string>)e.Value)?.ToList() ?? new List<string>();
+        await LoadFilteredAds();
     }
 
-    private void CancelEdit()
+    private void ShowAdDetails(Ad ad) => selectedAd = ad;
+    private void CloseAdDetails() => selectedAd = null;
+    private void AddNewAd() => selectedAd = new Ad();
+    private void EditAd(Ad ad) => selectedAd = ad;
+
+    private async Task DeleteAd(string id)
     {
-        currentAd = new Ad();
+        if (!string.IsNullOrEmpty(id))
+        {
+            await Http.DeleteAsync($"http://localhost:5066/api/Ad/{id}");
+            await LoadFilteredAds();
+        }
     }
 }

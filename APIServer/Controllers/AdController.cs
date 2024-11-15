@@ -54,6 +54,37 @@ namespace APIServer.Controllers
             return Ok(ad);
         }
 
+        // GET: api/Ad/filter
+        [HttpGet("filter")]
+        public async Task<IActionResult> GetFilteredAds(
+            [FromQuery] string? searchQuery,
+            [FromQuery] double? minPrice,
+            [FromQuery] double? maxPrice,
+            [FromQuery] string? categoryId)
+        {
+            try
+            {
+                var ads = await _adRepository.GetFilteredAdsAsync(searchQuery, minPrice, maxPrice, categoryId);
+
+                // Populate each ad with the Location data
+                foreach (var ad in ads)
+                {
+                    if (!string.IsNullOrEmpty(ad.LocationId))
+                    {
+                        ad.Location = await _locationRepository.GetLocationByIdAsync(ad.LocationId);
+                    }
+                }
+
+                return Ok(ads);
+            }
+            catch (Exception ex)
+            {
+                // Log fejl og returnér en passende fejlmeddelelse
+                Console.WriteLine($"Error in GetFilteredAds: {ex.Message}");
+                return StatusCode(500, "An error occurred while processing your request.");
+            }
+        }
+
         // POST: api/Ad
         [HttpPost]
         public async Task<IActionResult> CreateAd([FromBody] Ad ad)
@@ -110,6 +141,7 @@ namespace APIServer.Controllers
             return NoContent();
         }
 
+        // Helper function to get or create a location
         private async Task<Location> GetOrCreateLocationAsync(Location location)
         {
             // Find if a location with the same address exists
@@ -119,7 +151,7 @@ namespace APIServer.Controllers
             if (existingLocation == null)
             {
                 // Create a new location if it doesn't exist
-                var newLocation = new Location { Name = location.Name, Address = location.Address };
+                var newLocation = new Location { Classroom = location.Classroom, Address = location.Address };
                 await _locationRepository.AddLocationAsync(newLocation);
                 return newLocation;
             }

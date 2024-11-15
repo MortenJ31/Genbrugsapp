@@ -36,15 +36,17 @@ builder.Services.AddSingleton<MongoDbService>();
 builder.Services.AddSingleton<IAdRepository, AdRepositoryMongoDB>();
 builder.Services.AddSingleton<ILocationRepository, LocationRepositoryMongoDB>();
 builder.Services.AddSingleton<ICategoryRepository, CategoryRepositoryMongoDB>();
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5066") });
 
 // Konfigurer CORS til at tillade kun Blazor-klientens URL
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("policy", policy =>
     {
-        policy.WithOrigins("http://localhost:5176") // Porten til din Blazor WebAssembly-app
+        policy.WithOrigins("http://localhost:5176", "https://localhost:5176") 
             .AllowAnyHeader()
-            .AllowAnyMethod();
+            .AllowAnyMethod()
+            .AllowCredentials();
     });
 });
 

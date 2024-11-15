@@ -11,7 +11,7 @@ namespace APIServer.Repositories
 
         public AdRepositoryMongoDB(IMongoDatabase database)
         {
-            _ads = database.GetCollection<Ad>("Ad"); 
+            _ads = database.GetCollection<Ad>("Ad");
         }
 
         public async Task<List<Ad>> GetAllAdsAsync()
@@ -37,6 +37,35 @@ namespace APIServer.Repositories
         public async Task DeleteAdAsync(string id)
         {
             await _ads.DeleteOneAsync(ad => ad.Id == id);
+        }
+
+        public async Task<List<Ad>> GetFilteredAdsAsync(string? searchQuery, double? minPrice, double? maxPrice, string? categoryId)
+        {
+            var filterBuilder = Builders<Ad>.Filter;
+            var filter = filterBuilder.Empty;
+
+            if (!string.IsNullOrEmpty(searchQuery))
+            {
+                filter &= filterBuilder.Regex("title", new MongoDB.Bson.BsonRegularExpression($"^{searchQuery}", "i"));
+            }
+
+            if (minPrice.HasValue)
+            {
+                filter &= filterBuilder.Gte("price", minPrice.Value);
+            }
+
+            if (maxPrice.HasValue)
+            {
+                filter &= filterBuilder.Lte("price", maxPrice.Value);
+            }
+
+            if (!string.IsNullOrEmpty(categoryId))
+            {
+                var categoryObjectId = new MongoDB.Bson.ObjectId(categoryId);
+                filter &= filterBuilder.Eq("categoryId", categoryObjectId);
+            }
+
+            return await _ads.Find(filter).ToListAsync();
         }
     }
 }
