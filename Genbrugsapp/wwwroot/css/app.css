@@ -1,60 +1,151 @@
+/* Basic Page Styles */
 html, body {
     font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    color: #2c3e50;
+    background-color: #e8f5e9;
+    margin: 0;
+    padding: 0;
 }
 
-h1:focus {
-    outline: none;
-}
-
-a, .btn-link {
-    color: #0071c1;
-}
-
-.btn-primary {
-    color: #fff;
-    background-color: #1b6ec2;
-    border-color: #1861ac;
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-.page-title {
-    font-size: 24px;
+h1, h2, h3 {
     font-weight: bold;
+    color: #2e7d32;
+}
+
+.page-title {
+    font-size: 28px;
+    color: #1b5e20;
     margin-bottom: 20px;
-    color: #333;
 }
 
-.action-buttons {
-    margin-bottom: 15px;
+/* Navbar Styles */
+.top-row .navbar {
+    background-color: #1e88e5;
+    padding: 10px 15px;
 }
 
-.add-button {
-    background-color: #4CAF50;
+.top-row .navbar-brand {
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffffff;
+}
+
+.navbar-toggler {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+/* Collapsible Nav Menu */
+.nav-scrollable {
+    background-color: #1e88e5;
     color: white;
-    padding: 10px 20px;
+    padding: 10px 0;
+}
+
+/* Navigation Link Styling */
+.nav-item .nav-link {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    font-size: 18px;
+    font-weight: 500;
+    color: #ffffff;
+    background-color: #1e88e5;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.nav-item .nav-link:hover {
+    background-color: #1565c0;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.nav-item .nav-link.active {
+    background-color: #0d47a1;
+    font-weight: bold;
+}
+
+/* Icon Styling for Nav Items */
+.nav-item .nav-link .bi-megaphone,
+.nav-item .nav-link .bi-house-door-fill {
+    font-size: 20px;
+    margin-right: 8px;
+    color: #ffffff;
+    position: relative;
+    top: -4px; /* Slight adjustment for better vertical alignment */
+}
+
+/* Action Buttons */
+.action-buttons {
+    margin-bottom: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.add-button, .reset-button {
+    padding: 10px 15px;
     border: none;
     cursor: pointer;
+    border-radius: 5px;
+    font-size: 16px;
+    color: white;
 }
+
+.add-button { background-color: #66bb6a; }
+.reset-button { background-color: #ef5350; }
+
+/* Search Filter and Inputs */
+.search-filter {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-filter input[type="text"],
+.search-filter input[type="number"],
+.search-filter select {
+    padding: 10px;
+    border: 1px solid #4caf50;
+    border-radius: 5px;
+    font-size: 14px;
+    color: #2e7d32;
+    width: 180px;
+}
+
+.search-filter select {
+    height: auto;
+    min-width: 180px;
+}
+
+.search-filter input:focus,
+.search-filter select:focus {
+    border-color: #388e3c;
+    outline: none;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+}
+
 
 .ads-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 20px;
+    justify-content: space-between;
 }
 
 .ad-card {
     width: 280px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-    transition: transform 0.3s;
+    border: 1px solid #c8e6c9;
+    border-radius: 10px;
+    background-color: white;
+    transition: transform 0.3s, box-shadow 0.3s;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 .ad-card:hover {
-    transform: scale(1.02);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
 }
 
 .ad-image {
@@ -69,184 +160,52 @@ a, .btn-link {
 
 .ad-title {
     font-size: 18px;
-    font-weight: bold;
-    margin: 0 0 8px;
-}
-
-.ad-description {
-    color: #555;
-    margin: 0 0 10px;
+    color: #2c3e50;
+    margin: 0;
 }
 
 .ad-price {
     font-size: 16px;
+    color: #388e3c;
     font-weight: bold;
-    color: #4CAF50;
-}
-
-.ad-status {
-    font-size: 14px;
-    color: white;
-    padding: 5px 10px;
-    border-radius: 4px;
-}
-
-.ad-status.active { background-color: #4CAF50; }
-.ad-status.reserved { background-color: #FFA500; }
-.ad-status.sold { background-color: #FF0000; }
-.ad-status.inactive { background-color: #777; }
-
-.ad-category, .ad-location {
-    font-size: 14px;
-    color: #777;
-}
-
-.ad-actions {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    border-top: 1px solid #ddd;
-    background-color: #f9f9f9;
-}
-
-.edit-button, .delete-button {
-    padding: 8px 12px;
-    border: none;
-    cursor: pointer;
-}
-
-.edit-button {
-    background-color: #007BFF;
-    color: white;
-}
-
-.delete-button {
-    background-color: #DC3545;
-    color: white;
-}
-
-.edit-form {
-    max-width: 400px;
-    margin-top: 20px;
-    padding: 20px;
-    background-color: #f9f9f9;
-    border-radius: 8px;
-    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-control {
-    width: 100%;
-    padding: 8px;
-    border-radius: 4px;
-    border: 1px solid #ccc;
-}
-
-.save-button, .cancel-button {
-    padding: 10px 15px;
-    border: none;
-    cursor: pointer;
-}
-
-.save-button {
-    background-color: #4CAF50;
-    color: white;
-}
-
-.cancel-button {
-    background-color: #777;
-    color: white;
-    margin-left: 10px;
+    margin-top: 5px;
 }
 
 .no-ads-message {
-    color: #777;
+    color: #757575;
     font-size: 16px;
+    text-align: center;
+    margin: 20px 0;
 }
 
-.content {
-    padding-top: 1.1rem;
-}
 
-.valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
-}
-
-.invalid {
-    outline: 1px solid red;
-}
-
-.validation-message {
-    color: red;
-}
-
-#blazor-error-ui {
-    background: lightyellow;
-    bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
-    display: none;
-    left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+.ad-details-modal {
     position: fixed;
-    width: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
     z-index: 1000;
 }
 
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
-
-.blazor-error-boundary {
-    background: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTYiIGhlaWdodD0iNDkiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIG92ZXJmbG93PSJoaWRkZW4iPjxkZWZzPjxjbGlwUGF0aCBpZD0iY2xpcDAiPjxyZWN0IHg9IjIzNSIgeT0iNTEiIHdpZHRoPSI1NiIgaGVpZ2h0PSI0OSIvPjwvY2xpcFBhdGg+PC9kZWZzPjxnIGNsaXAtcGF0aD0idXJsKCNjbGlwMCkiIHRyYW5zZm9ybT0idHJhbnNsYXRlKC0yMzUgLTUxKSI+PHBhdGggZD0iTTI2My41MDYgNTFDMjY0LjcxNyA1MSAyNjUuODEzIDUxLjQ4MzcgMjY2LjYwNiA1Mi4yNjU4TDI2Ny4wNTIgNTIuNzk4NyAyNjcuNTM5IDUzLjYyODMgMjkwLjE4NSA5Mi4xODMxIDI5MC41NDUgOTIuNzk1IDI5MC42NTYgOTIuOTk2QzI5MC44NzcgOTMuNTEzIDI5MSA5NC4wODE1IDI5MSA5NC42NzgyIDI5MSA5Ny4wNjUxIDI4OS4wMzggOTkgMjg2LjYxNyA5OUwyNDAuMzgzIDk5QzIzNy45NjMgOTkgMjM2IDk3LjA2NTEgMjM2IDk0LjY3ODIgMjM2IDk0LjM3OTkgMjM2LjAzMSA5NC4wODg2IDIzNi4wODkgOTMuODA3MkwyMzYuMzM4IDkzLjAxNjIgMjM2Ljg1OCA5Mi4xMzE0IDI1OS40NzMgNTMuNjI5NCAyNTkuOTYxIDUyLjc5ODUgMjYwLjQwNyA1Mi4yNjU4QzI2MS4yIDUxLjQ4MzcgMjYyLjI5NiA1MSAyNjMuNTA2IDUxWk0yNjMuNTg2IDY2LjAxODNDMjYwLjczNyA2Ni4wMTgzIDI1OS4zMTMgNjcuMTI0NSAyNTkuMzEzIDY5LjMzNyAyNTkuMzEzIDY5LjYxMDIgMjU5LjMzMiA2OS44NjA4IDI1OS4zNzEgNzAuMDg4N0wyNjEuNzk1IDg0LjAxNjEgMjY1LjM4IDg0LjAxNjEgMjY3LjgyMSA2OS43NDc1QzI2Ny44NiA2OS43MzA5IDI2Ny44NzkgNjkuNTg3NyAyNjcuODc5IDY5LjMxNzkgMjY3Ljg3OSA2Ny4xMTgyIDI2Ni40NDggNjYuMDE4MyAyNjMuNTg2IDY2LjAxODNaTTI2My41NzYgODYuMDU0N0MyNjEuMDQ5IDg2LjA1NDcgMjU5Ljc4NiA4Ny4zMDA1IDI1OS43ODYgODkuNzkyMSAyNTkuNzg2IDkyLjI4MzcgMjYxLjA0OSA5My41Mjk1IDI2My41NzYgOTMuNTI5NSAyNjYuMTE2IDkzLjUyOTUgMjY3LjM4NyA5Mi4yODM3IDI2Ny4zODcgODkuNzkyMSAyNjcuMzg3IDg3LjMwMDUgMjY2LjExNiA4Ni4wNTQ3IDI2My41NzYgODYuMDU0N1oiIGZpbGw9IiNGRkU1MDAiIGZpbGwtcnVsZT0iZXZlbm9kZCIvPjwvZz48L3N2Zz4=) no-repeat 1rem/1.8rem, #b32121;
-    padding: 1rem 1rem 1rem 3.7rem;
-    color: white;
+.modal-content {
+    background-color: white;
+    padding: 20px;
+    border-radius: 10px;
+    width: 80%;
+    max-width: 600px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
 }
 
-    .blazor-error-boundary::after {
-        content: "An error has occurred."
-    }
-
-.loading-progress {
-    position: relative;
-    display: block;
-    width: 8rem;
-    height: 8rem;
-    margin: 20vh auto 1rem auto;
-}
-
-    .loading-progress circle {
-        fill: none;
-        stroke: #e0e0e0;
-        stroke-width: 0.6rem;
-        transform-origin: 50% 50%;
-        transform: rotate(-90deg);
-    }
-
-.loading-progress circle:last-child {
-    stroke: #1b6ec2;
-    stroke-dasharray: 150, 500; 
-    transition: stroke-dasharray 0.1s ease-in-out;
-}
-
-.loading-progress-text {
+.close-button {
     position: absolute;
-    text-align: center;
-    font-weight: bold;
-    top: 40%; 
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-.loading-progress-text::after {
-    content: "Loading..."; 
-}
-
-code {
-    color: #c02d76;
+    top: 15px;
+    right: 20px;
+    font-size: 20px;
+    cursor: pointer;
+    color: #333;
 }

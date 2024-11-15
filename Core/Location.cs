@@ -11,8 +11,8 @@ namespace Core
         [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
         public string? Id { get; set; }  // Gør Id nullable
 
-        [BsonElement("name")]
-        public string Name { get; set; }
+        [BsonElement("classroom")]
+        public string Classroom { get; set; }
 
         [BsonElement("address")]
         public string Address { get; set; }
