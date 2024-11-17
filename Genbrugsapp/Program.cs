@@ -8,10 +8,17 @@ using Genbrugsapp.Service;
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5066") });
+
+// HttpClient for backend API
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5066") }); // Backend API
+
+// Services for authorization and local storage
 builder.Services.AddAuthorizationCore();
-builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddBlazoredLocalStorage(); // LocalStorage service
+
+// Register LoginService (client-side)
 builder.Services.AddScoped<ILoginService, LoginServiceClientSide>();
+// Register custom AuthenticationStateProvider (if needed)
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 
 await builder.Build().RunAsync();

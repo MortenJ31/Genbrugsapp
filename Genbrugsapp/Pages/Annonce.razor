@@ -1,11 +1,12 @@
 @page "/annonce"
 @using Core
 @inject HttpClient Http
+@inject NavigationManager navManager
 
 <h2 class="page-title">Administrer og Find Annoncer</h2>
 
 <div class="action-buttons">
-    <button class="add-button" @onclick="AddNewAd">+ Opret Ny Annonce</button>
+    <button class="add-button" @onclick="NavigateToMinProfil">+ Opret Ny Annonce</button>
     <button class="reset-button" @onclick="ResetFilters">Nulstil Filter</button>
 </div>
 
@@ -35,10 +36,6 @@
                     <h3 class="ad-title">@ad.Title</h3>
                     <p class="ad-price">@ad.Price.ToString("N2") kr</p>
                 </div>
-                <div class="ad-actions">
-                    <button class="edit-button" @onclick="() => EditAd(ad)">Rediger</button>
-                    <button class="delete-button" @onclick="() => DeleteAd(ad.Id ?? string.Empty)">Slet</button>
-                </div>
             </div>
         }
     </div>
@@ -48,7 +45,7 @@ else
     <p class="no-ads-message">Ingen aktive annoncer tilgængelige.</p>
 }
 
-<!-- Detaljevisning af annoncer -->
+<!-- Detaljevisning af annoncer (Modal) -->
 @if (selectedAd != null)
 {
     <div class="ad-details-modal">
@@ -140,17 +137,20 @@ else
         await LoadFilteredAds();
     }
 
-    private void ShowAdDetails(Ad ad) => selectedAd = ad;
-    private void CloseAdDetails() => selectedAd = null;
-    private void AddNewAd() => selectedAd = new Ad();
-    private void EditAd(Ad ad) => selectedAd = ad;
-
-    private async Task DeleteAd(string id)
+    private void ShowAdDetails(Ad ad)
     {
-        if (!string.IsNullOrEmpty(id))
-        {
-            await Http.DeleteAsync($"http://localhost:5066/api/Ad/{id}");
-            await LoadFilteredAds();
-        }
+        selectedAd = ad; // Show ad details in the modal
     }
+
+    private void CloseAdDetails()
+    {
+        selectedAd = null; // Close modal
+    }
+
+    private void NavigateToMinProfil()
+    {
+      
+        navManager.NavigateTo("/minprofil");
+    }
+
 }

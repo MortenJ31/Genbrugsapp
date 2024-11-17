@@ -89,6 +89,14 @@ namespace APIServer.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateAd([FromBody] Ad ad)
         {
+            // Antager, at userId er blevet sendt fra frontend
+            var userId = ad.UserId;  // Hent userId fra request body
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                return BadRequest("UserId er påkrævet.");
+            }
+
             ad.CreatedAt = DateTime.UtcNow;
 
             // Assign LocationId if a location address is provided
@@ -99,6 +107,7 @@ namespace APIServer.Controllers
                 ad.Location = location; // Populate the ad's Location property
             }
 
+            // Here we save the ad with the userId attached
             await _adRepository.AddAdAsync(ad);
             return CreatedAtAction(nameof(GetAdById), new { id = ad.Id }, ad);
         }
@@ -157,6 +166,29 @@ namespace APIServer.Controllers
             }
 
             return existingLocation;
+        }
+
+        // GET: api/Ad/user/{userId}
+        [HttpGet("user/{userId}")]
+        public async Task<IActionResult> GetAdsByUserId(string userId)
+        {
+            var ads = await _adRepository.GetAdsByUserIdAsync(userId);
+
+            if (ads == null || !ads.Any())
+            {
+                return NotFound("No ads found for this user.");
+            }
+
+            // Populate each ad with the Location data
+            foreach (var ad in ads)
+            {
+                if (!string.IsNullOrEmpty(ad.LocationId))
+                {
+                    ad.Location = await _locationRepository.GetLocationByIdAsync(ad.LocationId);
+                }
+            }
+
+            return Ok(ads);
         }
     }
 }

@@ -1,18 +1,12 @@
 ﻿@page "/"
-@* {target:alpha} *@
 @using Genbrugsapp.Service
-
+@using Blazored.LocalStorage
 @inject ILoginService loginService
 @inject NavigationManager navManager
-@inject AuthenticationStateProvider AuthStateProvider
-@* @inject CustomAuthStateProvider AuthStateProvider
- *@
-
-
+@inject ILocalStorageService localStorage
 
 <div class="container d-flex justify-content-center align-items-center" style="min-height: 100vh;">
     <div class="row bg-light shadow-lg p-4 rounded w-100">
-        <!-- Venstre kolonne med information om genbrugsmarkedet -->
         <div class="col-md-6 d-flex flex-column justify-content-center">
             <h1 class="text-success">♻️ Velkommen til Erhvervsakademi Aarhus' genbrugsmarked</h1>
             <p class="lead text-secondary">Her kan du købe og sælge genbrugsvare.</p>
@@ -21,27 +15,34 @@
                 For at støtte dette projekt vil Eaaa stille lokaler tilrådighed til opbevaring af genbrugsvarer,
                 som vil være tilgængelige i en begrænset åbningstid med personale til stede.
             </p>
-            <!-- Billede af genbrug -->
             <div class="recycle-image-container">
                 <img src="img/recycle.jpeg" alt="Genbrug" class="img-fluid mt-3 shadow">
             </div>
         </div>
 
-        <!-- Højre kolonne med login form -->
         <div class="col-md-6 d-flex flex-column justify-content-center bg-white p-4 rounded shadow-sm">
             <h3 class="text-center text-success mb-4">🌍 Login</h3>
             <div class="mb-3">
                 <label for="username" class="form-label">Brugernavn:</label>
-                <InputText id="username" @bind-Value="username"
+                <InputText id="username" @bind-Value="username" 
                            placeholder="Indtast brugernavn..." class="form-control" />
             </div>
             <div class="mb-3">
                 <label for="password" class="form-label">Password:</label>
-                <InputText id="password" @bind-Value="password" type="password"
+                <InputText id="password" @bind-Value="password" type="password" 
                            placeholder="Indtast password..." class="form-control" />
             </div>
+
+            <div class="d-flex justify-content-center mb-3">
+                <p class="text-center">
+                    Ny her? <a href="/register" class="text-success">Opret her</a>
+                </p>
+            </div>
+
             <div class="d-flex justify-content-end mb-3">
-                <button @onclick="OnClickLogin" class="btn btn-success w-100">Login</button>
+                <button @onclick="OnClickLogin" class="btn btn-success w-100" disabled="@isLoggingIn">
+                    @(isLoggingIn ? "Logger ind..." : "Login")
+                </button>
             </div>
             @if (!string.IsNullOrEmpty(errorText))
             {
@@ -57,24 +58,40 @@
     private string username = "";
     private string password = "";
     private string errorText = "";
-
-    [Parameter]
-    public string target { get; set; }
+    private bool isLoggingIn = false;
 
     private async Task OnClickLogin()
     {
-        var success = await loginService.Login(username, password);
-        if (success)
+        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
-            var customAuthProvider = (CustomAuthStateProvider)AuthStateProvider;
-            var user = await loginService.GetUserLoggedIn();
-            customAuthProvider.MarkUserAsAuthenticated(user);
-
-            navManager.NavigateTo("/home"); // Naviger til forsiden eller en anden beskyttet side
+            errorText = "Brugernavn og adgangskode må ikke være tomme.";
+            return;
         }
-        else
+
+        isLoggingIn = true;
+
+        try
         {
-            errorText = "Forkert kombination. Prøv igen.";
+            var loginResponse = await loginService.Login(username, password);
+
+            if (loginResponse != null && !string.IsNullOrEmpty(loginResponse.UserId))
+            {
+                await localStorage.SetItemAsync("userid", loginResponse.UserId); // Brug "userid" som nøgle
+                navManager.NavigateTo("/Home");
+            }
+            else
+            {
+                await localStorage.RemoveItemAsync("userid");
+                errorText = "Forkert brugernavn eller adgangskode. Prøv igen.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorText = $"En fejl opstod: {ex.Message}";
+        }
+        finally
+        {
+            isLoggingIn = false;
         }
     }
 }

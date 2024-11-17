@@ -1,33 +1,78 @@
-﻿using Microsoft.AspNetCore.Components;
-using Blazored.LocalStorage;
-using Core;
+﻿using Blazored.LocalStorage;
+using Genbrugsapp.Service;
+using System.Net.Http;
+using System.Net.Http.Json;
+using System.Threading.Tasks;
 
-namespace Genbrugsapp.Service
+public class LoginServiceClientSide : ILoginService
 {
-    public class LoginServiceClientSide : ILoginService
+    private readonly HttpClient _httpClient;
+    private readonly ILocalStorageService _localStorageService;
+
+    // Konstruktor til at injicere HttpClient og LocalStorageService
+    public LoginServiceClientSide(HttpClient httpClient, ILocalStorageService localStorageService)
     {
+        _httpClient = httpClient;
+        _localStorageService = localStorageService;
+    }
 
-        private ILocalStorageService localStorage { get; set; }
+    // Implementering af Login-metoden
+    public async Task<LoginResponse> Login(string username, string password)
+    {
+        var loginRequest = new { Username = username, Password = password };
+        var response = await _httpClient.PostAsJsonAsync("/api/user/login", loginRequest);
 
-        public LoginServiceClientSide(ILocalStorageService ls)
+        if (response.IsSuccessStatusCode)
         {
-            localStorage = ls;
-        }
-        public async Task<User?> GetUserLoggedIn()
-        {
-            var res = await localStorage.GetItemAsync<User>("user");
-            return res;
-        }
-        public async Task<bool> Login(string username, string password)
-        {
-            if (username.Equals("Morten") && password.Equals("1234"))
+            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+            if (result != null)
             {
-                User user = new User { Username = username, Password = "verified", Role = "admin" };
-
-                await localStorage.SetItemAsync("user", user);
-                return true;
+                await _localStorageService.SetItemAsync("userId", result.UserId);
+                await _localStorageService.SetItemAsync("username", result.Username);
             }
-            return false;
+            return result;
         }
+        else
+        {
+            return new LoginResponse
+            {
+                UserId = null,
+                Username = null
+            };
+        }
+    }
+
+    // Implementering af GetUserLoggedIn-metoden
+    public async Task<User?> GetUserLoggedIn()
+    {
+        var userId = await _localStorageService.GetItemAsync<string>("userId");
+        var username = await _localStorageService.GetItemAsync<string>("username");
+
+        if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(username))
+        {
+            return new User { UserId = userId, Username = username };
+        }
+
+        return null;
+    }
+
+    // Implementering af Logout-metoden
+    public async Task Logout()
+    {
+        await _localStorageService.RemoveItemAsync("userId");
+        await _localStorageService.RemoveItemAsync("username");
+    }
+
+    // Implementering af GetUserId-metoden (ny)
+    public async Task<string> GetUserId()
+    {
+        var userId = await _localStorageService.GetItemAsync<string>("userId");
+        return userId;
+    }
+
+    // Implementering af SetUserId-metoden (ny)
+    public async Task SetUserId(string userId)
+    {
+        await _localStorageService.SetItemAsync("userId", userId);
     }
 }

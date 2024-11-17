@@ -29,30 +29,27 @@ builder.Services.AddSingleton<IMongoDatabase>(sp =>
     return client.GetDatabase(settings.DatabaseName);
 });
 
-// Registrer MongoDbService, hvis det bruges andre steder
+// Registrer MongoDbService
 builder.Services.AddSingleton<MongoDbService>();
 
-// Registrér IAdRepository med AdRepositoryMongoDB som implementering
+// Registrer Repositories
 builder.Services.AddSingleton<IAdRepository, AdRepositoryMongoDB>();
 builder.Services.AddSingleton<ILocationRepository, LocationRepositoryMongoDB>();
 builder.Services.AddSingleton<ICategoryRepository, CategoryRepositoryMongoDB>();
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5066") });
 
-// Konfigurer CORS til at tillade kun Blazor-klientens URL
+// CORS setup
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("policy", policy =>
     {
-        policy.WithOrigins("http://localhost:5176", "https://localhost:5176") 
+        policy.WithOrigins("http://localhost:5176", "https://localhost:5176")
             .AllowAnyHeader()
             .AllowAnyMethod()
             .AllowCredentials();
     });
 });
 
-// Register HttpClient service
-builder.Services.AddHttpClient();
-
+// Configure API and Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddControllers()
@@ -60,9 +57,9 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
+
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -70,7 +67,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors("policy"); // Anvend CORS-politikken
+app.UseCors("policy");
 app.UseAuthorization();
 
 app.MapControllers();

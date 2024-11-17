@@ -1,0 +1,59 @@
+@page "/register"
+@inject HttpClient Http
+@inject ILoginService LoginService
+<h3>Opret Bruger</h3>
+
+<EditForm Model="newUser" OnValidSubmit="RegisterUser">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div>
+        <label for="username">Brugernavn:</label>
+        <InputText id="username" @bind-Value="newUser.Username" />
+    </div>
+    <div>
+        <label for="password">Kodeord:</label>
+        <InputText id="password" type="password" @bind-Value="newUser.Password" />
+    </div>
+    <div>
+        <label for="email">E-mail:</label>
+        <InputText id="email" @bind-Value="newUser.Email" />
+    </div>
+
+    <button type="submit">Opret Bruger</button>
+</EditForm>
+
+<p>@responseMessage</p>
+
+@code {
+    private User newUser = new();
+    private string responseMessage = "";
+
+    private async Task RegisterUser()
+    {
+        try
+        {
+            var result = await Http.PostAsJsonAsync("api/user/register", newUser);
+            if (result.IsSuccessStatusCode)
+            {
+                responseMessage = "Bruger oprettet!";
+            }
+            else
+            {
+                responseMessage = await result.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            responseMessage = $"Fejl: {ex.Message}";
+        }
+    }
+
+    public class User
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+        public string Email { get; set; }
+        public string Role { get; set; }
+    }
+}

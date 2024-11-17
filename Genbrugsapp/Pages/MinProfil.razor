@@ -1,0 +1,268 @@
+@page "/MinProfil"
+@using Core
+@inject HttpClient HttpClient
+@inject ILoginService _loginService
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager NavManager
+
+<h3>Min Profil</h3>
+
+@if (!string.IsNullOrEmpty(successMessage))
+{
+    <div class="alert alert-success">@successMessage</div>
+}
+@if (!string.IsNullOrEmpty(errorMessage))
+{
+    <div class="alert alert-danger">@errorMessage</div>
+}
+
+<!-- Form for Creating/Editing an Ad -->
+<EditForm Model="@currentAd" OnValidSubmit="SaveAd" class="edit-form">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group">
+        <label>Titel:</label>
+        <InputText @bind-Value="currentAd.Title" class="form-control" placeholder="Indtast annoncentitel" />
+    </div>
+
+    <div class="form-group">
+        <label>Beskrivelse:</label>
+        <InputTextArea @bind-Value="currentAd.Description" class="form-control" placeholder="Beskrivelse af varen" />
+    </div>
+
+    <div class="form-group">
+        <label>Pris:</label>
+        <InputNumber @bind-Value="currentAd.Price" class="form-control" placeholder="Angiv prisen i DKK" />
+    </div>
+
+    <div class="form-group">
+        <label>Status:</label>
+        <InputSelect @bind-Value="currentAd.Status" class="form-control">
+            @if (isEditing)
+            {
+                <option value="Active">Aktiv</option>
+                <option value="Reserved">Reserveret</option>
+                <option value="Sold">Solgt</option>
+                <option value="Inactive">Inaktiv</option>
+            }
+            else
+            {
+                <option value="Active">Aktiv</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="form-group">
+        <label>Billede URL:</label>
+        <InputText @bind-Value="currentAd.ImageUrl" class="form-control" placeholder="URL til billede af varen" />
+    </div>
+
+    <div class="form-group">
+        <label>Kategori:</label>
+        <InputSelect @bind-Value="currentAd.CategoryId" class="form-control">
+            <option value="">-- Vælg Kategori --</option>
+            @foreach (var category in categories)
+            {
+                <option value="@category.Id">@category.Name</option>
+            }
+        </InputSelect>
+    </div>
+
+    <div class="form-group">
+        <label>Lokation:</label>
+        <InputSelect @bind-Value="currentAd.LocationId" class="form-control">
+            <option value="">-- Vælg Lokation --</option>
+            @foreach (var location in locations)
+            {
+                <option value="@location.Id">@location.Address</option>
+            }
+        </InputSelect>
+    </div>
+
+    <button type="submit" class="save-button">@((isEditing ? "Gem ændringer" : "Opret Annonce"))</button>
+    <button type="button" class="cancel-button" @onclick="CancelEdit">Annuller</button>
+</EditForm>
+
+<!-- List of User's Ads -->
+<h4>Mine Annoncer</h4>
+<ul class="ads-list">
+    @foreach (var ad in userAds)
+    {
+        <li class="ad-item">
+            <strong>@ad.Title</strong>
+            <p>@ad.Description</p>
+            <button class="edit-button" @onclick="() => EditAd(ad)">Rediger</button>
+            <button class="delete-button" @onclick="() => DeleteAd(ad.Id)">Slet</button>
+        </li>
+    }
+</ul>
+
+@code {
+    private Ad currentAd = new Ad(); // The ad currently being edited
+    private List<Category> categories = new List<Category>(); // List of categories for dropdown
+    private List<Location> locations = new List<Location>(); // List of locations for dropdown
+    private List<Ad> userAds = new List<Ad>(); // List of the user's ads
+    private bool isEditing = false; // Flag to track if we are in editing mode or creating a new ad
+    private string successMessage = string.Empty;
+    private string errorMessage = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Læs userid direkte fra localStorage
+        var userId = await LocalStorage.GetItemAsync<string>("userid");
+
+        // Debugging: Log værdien af userid
+        Console.WriteLine($"UserId fra LocalStorage: {userId}");
+
+        // Hvis userid er tom eller null, redirect til login
+        if (string.IsNullOrEmpty(userId))
+        {
+            errorMessage = "Du skal være logget ind for at se denne side.";
+            NavManager.NavigateTo("/");
+            return;
+        }
+
+        // Hvis userid findes, fortsæt med at loade data
+        await LoadCategoriesAsync();
+        await LoadLocationsAsync();
+        await LoadUserAdsAsync();
+    }
+
+
+    private async Task LoadCategoriesAsync()
+    {
+        categories = await HttpClient.GetFromJsonAsync<List<Category>>("http://localhost:5066/api/Category") ?? new List<Category>();
+    }
+
+    private async Task LoadLocationsAsync()
+    {
+        locations = await HttpClient.GetFromJsonAsync<List<Location>>("http://localhost:5066/api/Location") ?? new List<Location>();
+    }
+
+    private async Task LoadUserAdsAsync()
+    {
+        try
+        {
+            // Hent userid direkte fra localStorage
+            var userId = await LocalStorage.GetItemAsync<string>("userid");
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                userAds = new List<Ad>();
+                errorMessage = "Du skal være logget ind for at se dine annoncer.";
+                return;
+            }
+
+            // Hent brugerens annoncer fra API
+            userAds = await HttpClient.GetFromJsonAsync<List<Ad>>($"http://localhost:5066/api/Ad/user/{userId}") ?? new List<Ad>();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Fejl ved indlæsning af annoncer: {ex.Message}";
+        }
+    }
+
+
+    private async Task SaveAd()
+    {
+        successMessage = string.Empty;
+        errorMessage = string.Empty;
+
+        try
+        {
+            HttpResponseMessage response;
+
+            var userId = await LocalStorage.GetItemAsync<string>("userid");
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                errorMessage = "UserId er påkrævet. Log ind først.";
+                return;
+            }
+
+            currentAd.UserId = userId;
+
+            if (isEditing)
+            {
+                response = await HttpClient.PutAsJsonAsync($"http://localhost:5066/api/Ad/{currentAd.Id}", currentAd);
+                successMessage = "Ændringer gemt!";
+            }
+            else
+            {
+                currentAd.Status = "Active";
+                response = await HttpClient.PostAsJsonAsync("http://localhost:5066/api/Ad", currentAd);
+                successMessage = "Annonce oprettet!";
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                currentAd = new Ad();
+                isEditing = false;
+                await LoadUserAdsAsync();
+            }
+            else
+            {
+                errorMessage = "Fejl ved lagring af annoncen.";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Du har ingen annoncer tilgængelig";
+        }
+    }
+
+    private void CancelEdit()
+    {
+        currentAd = new Ad();
+        isEditing = false;
+        successMessage = string.Empty;
+        errorMessage = string.Empty;
+    }
+
+    private void EditAd(Ad ad)
+    {
+        currentAd = new Ad
+        {
+            Id = ad.Id,
+            Title = ad.Title,
+            Description = ad.Description,
+            Price = ad.Price,
+            Status = ad.Status,
+            ImageUrl = ad.ImageUrl,
+            CategoryId = ad.CategoryId,
+            LocationId = ad.LocationId
+        };
+        isEditing = true;
+        successMessage = string.Empty;
+        errorMessage = string.Empty;
+    }
+
+    private async Task DeleteAd(string adId)
+    {
+        if (string.IsNullOrEmpty(adId))
+        {
+            errorMessage = "Ugyldigt annonce-ID.";
+            return;
+        }
+
+        try
+        {
+            var response = await HttpClient.DeleteAsync($"http://localhost:5066/api/Ad/{adId}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadUserAdsAsync();
+                successMessage = "Annoncen blev slettet.";
+            }
+            else
+            {
+                errorMessage = "Fejl ved sletning af annoncen.";
+            }
+        }
+        catch
+        {
+            errorMessage = "Fejl ved sletning af annoncen.";
+        }
+    }
+}

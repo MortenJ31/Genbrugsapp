@@ -1,211 +1,326 @@
-/* Basic Page Styles */
-html, body {
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    color: #2c3e50;
-    background-color: #e8f5e9;
+/* Grundlæggende styling for body og layout */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f4f4f4; /* Lys grå baggrund */
+    color: #333;
     margin: 0;
     padding: 0;
 }
 
-h1, h2, h3 {
-    font-weight: bold;
-    color: #2e7d32;
+.app-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background-color: #f4f4f4;
 }
 
-.page-title {
-    font-size: 28px;
-    color: #1b5e20;
-    margin-bottom: 20px;
-}
-
-/* Navbar Styles */
-.top-row .navbar {
-    background-color: #1e88e5;
-    padding: 10px 15px;
-}
-
-.top-row .navbar-brand {
-    font-size: 20px;
-    font-weight: bold;
-    color: #ffffff;
-}
-
-.navbar-toggler {
-    border-color: rgba(255, 255, 255, 0.5);
-}
-
-/* Collapsible Nav Menu */
-.nav-scrollable {
-    background-color: #1e88e5;
-    color: white;
+.app-header, .app-footer {
+    background-color: #ffffff;
     padding: 10px 0;
+    border-bottom: 1px solid #ddd;
 }
 
-/* Navigation Link Styling */
-.nav-item .nav-link {
-    display: flex;
-    align-items: center;
-    padding: 12px 15px;
-    font-size: 18px;
-    font-weight: 500;
-    color: #ffffff;
-    background-color: #1e88e5;
-    border-radius: 8px;
-    text-decoration: none;
-    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+/* Header og Footer */
+.app-header {
+    text-align: center;
+    font-size: 1.5em;
+    color: #4CAF50; /* Naturlig grøn */
 }
 
-.nav-item .nav-link:hover {
-    background-color: #1565c0;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+.app-footer {
+    font-size: 0.9em;
+    color: #888;
+    text-align: center;
 }
 
-.nav-item .nav-link.active {
-    background-color: #0d47a1;
-    font-weight: bold;
-}
-
-/* Icon Styling for Nav Items */
-.nav-item .nav-link .bi-megaphone,
-.nav-item .nav-link .bi-house-door-fill {
-    font-size: 20px;
-    margin-right: 8px;
-    color: #ffffff;
-    position: relative;
-    top: -4px; /* Slight adjustment for better vertical alignment */
-}
-
-/* Action Buttons */
-.action-buttons {
-    margin-bottom: 20px;
-    display: flex;
-    gap: 10px;
-}
-
-.add-button, .reset-button {
-    padding: 10px 15px;
-    border: none;
-    cursor: pointer;
-    border-radius: 5px;
-    font-size: 16px;
-    color: white;
-}
-
-.add-button { background-color: #66bb6a; }
-.reset-button { background-color: #ef5350; }
-
-/* Search Filter and Inputs */
-.search-filter {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-    align-items: center;
-    flex-wrap: wrap;
-}
-
-.search-filter input[type="text"],
-.search-filter input[type="number"],
-.search-filter select {
+/* Navigation menu styles */
+.navbar {
+    max-width: 1200px;
+    margin: 0 auto;
     padding: 10px;
-    border: 1px solid #4caf50;
-    border-radius: 5px;
-    font-size: 14px;
-    color: #2e7d32;
-    width: 180px;
+    background-color: #3e8e41; /* Mørkere grøn */
 }
 
-.search-filter select {
-    height: auto;
-    min-width: 180px;
+.navbar .nav-link {
+    color: white;
+    margin-right: 15px;
 }
 
-.search-filter input:focus,
-.search-filter select:focus {
-    border-color: #388e3c;
-    outline: none;
-    box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+.navbar .nav-link:hover {
+    color: #ddd; /* Lidt lysere farve ved hover */
 }
 
-
-.ads-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    justify-content: space-between;
-}
-
-.ad-card {
-    width: 280px;
-    border: 1px solid #c8e6c9;
-    border-radius: 10px;
+/* Main content area */
+main {
+    padding: 20px;
+    max-width: 1200px;
+    margin: 20px auto;
     background-color: white;
-    transition: transform 0.3s, box-shadow 0.3s;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
 }
 
-.ad-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+/* Form and button styling */
+input, select, button {
+    border-radius: 4px;
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 15px;
 }
 
-.ad-image {
-    width: 100%;
-    height: 180px;
-    object-fit: cover;
+/* Knapper og handlinger */
+button {
+    background-color: #4CAF50; /* Grøn farve */
+    color: white;
+    cursor: pointer;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
 }
 
-.ad-info {
-    padding: 15px;
+button:hover {
+    background-color: #45a049; /* Lidt mørkere grøn ved hover */
 }
 
-.ad-title {
-    font-size: 18px;
-    color: #2c3e50;
+/* Minimalistisk liste og tekst */
+ul.ads-list, .ads-container {
+    list-style-type: none;
+    padding: 0;
     margin: 0;
 }
 
-.ad-price {
-    font-size: 16px;
-    color: #388e3c;
-    font-weight: bold;
-    margin-top: 5px;
+.ads-container .ad-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #ffffff;
+    padding: 15px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
-.no-ads-message {
-    color: #757575;
-    font-size: 16px;
-    text-align: center;
-    margin: 20px 0;
+.ads-container .ad-card img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 5px;
 }
 
+.ads-container .ad-info {
+    flex: 1;
+    padding-left: 15px;
+}
 
+.ads-container .ad-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.ads-container .edit-button, .ads-container .delete-button {
+    background-color: #3e8e41; /* Grøn knap */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.ads-container .edit-button:hover, .ads-container .delete-button:hover {
+    background-color: #45a049; /* Hover effekt */
+}
+
+.search-filter input, .search-filter select {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-right: 10px;
+    border-radius: 4px;
+}
+
+.search-filter input[type="number"] {
+    width: 120px;
+}
+
+.search-filter .category-select {
+    width: 200px;
+    height: 100px;
+    resize: vertical;
+}
+/* Modalvindue */
 .ad-details-modal {
-    position: fixed;
+    position: fixed; /* Gør modalvindue fast i forhold til skærmen */
     top: 0;
     left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent baggrund */
     display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
+    justify-content: center; /* Center modal horisontalt */
+    align-items: center; /* Center modal vertikalt */
+    z-index: 1000; /* Sørg for at den er øverst */
 }
 
 .modal-content {
     background-color: white;
     padding: 20px;
-    border-radius: 10px;
-    width: 80%;
-    max-width: 600px;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    max-width: 800px; /* Begræns modalens maks bredde */
+    width: 90%; /* Gør den lidt responsiv */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: left;
+    max-height: 80%; /* Sæt en maksimal højde */
+    overflow-y: auto; /* Hvis indholdet er for langt, så vis scroll */
+}
+
+.modal-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 15px;
 }
 
 .close-button {
     position: absolute;
-    top: 15px;
-    right: 20px;
-    font-size: 20px;
-    cursor: pointer;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
     color: #333;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+.close-button:hover {
+    color: #e74c3c; /* Rød farve ved hover */
+}
+
+/* Ad card */
+.ads-container .ad-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #ffffff;
+    padding: 15px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: transform 0.2s;
+    width: 100%;
+}
+
+.ads-container .ad-card:hover {
+    transform: translateY(-5px); /* Lille løft-effekt ved hover */
+}
+
+.ads-container .ad-card img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+.ads-container .ad-info {
+    flex: 1;
+    padding-left: 15px;
+}
+
+.ads-container .ad-info h3 {
+    font-size: 1.2em;
+    margin: 0;
+    font-weight: bold;
+}
+
+.ads-container .ad-info p {
+    font-size: 1em;
+    color: #555;
+}
+
+.ads-container .ad-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.ads-container .ad-actions button {
+    background-color: #3e8e41; /* Grøn knap */
+    color: white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+}
+
+.ads-container .ad-actions button:hover {
+    background-color: #45a049;
+}
+
+.ads-container .no-ads-message {
+    color: #888;
+    font-size: 1.2em;
+    text-align: center;
+}
+
+/* Search and filter styles */
+.search-filter input,
+.search-filter select {
+    padding: 10px;
+    margin-right: 10px;
+    border-radius: 4px;
+    border: 1px solid #ddd;
+}
+
+.search-filter .category-select {
+    width: 200px;
+    height: 100px;
+    resize: vertical;
+}
+
+.search-filter input[type="number"] {
+    width: 120px;
+}
+
+/* For responsiveness */
+@media (max-width: 768px) {
+    .search-filter {
+        flex-direction: column;
+    }
+
+    .ads-container .ad-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .modal-content {
+        width: 95%;
+        max-height: 90%;
+    }
+}
+
+
+/* Responsivitet og justering af layout */
+@media (max-width: 768px) {
+    .navbar {
+        padding: 10px;
+    }
+
+    .app-container {
+        flex-direction: column;
+    }
+
+    main {
+        padding: 15px;
+        margin: 10px;
+    }
+
+    .ads-container .ad-card {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .search-filter {
+        display: flex;
+        flex-direction: column;
+    }
 }

@@ -1,78 +1,42 @@
-/* Standard baggrund med sidebar (bruges normalt på alle sider undtagen login) */
+/* Standard baggrund for sider */
 .default-background {
     display: flex;
     background-color: #f7f7f7; /* Farve til hovedlayout */
 }
 
-/* Hvid baggrund til login-siden */
+/* Login side baggrund */
 .login-background {
     background-color: white;
     display: block; /* Fjerner sidebarens layout */
 }
 
-    /* Skjul sidebar på login-siden */
-    .login-background .sidebar {
-        display: none; /* Skjuler sidebaren på login-siden */
-    }
+/* Skjul sidebar pÃ¥ login siden */
+.login-background .sidebar {
+    display: none; /* Skjuler sidebaren */
+}
 
-    /* Gør main-content bredere og fjerner padding på login-siden */
-    .login-background .main-content {
-        width: 100%; /* Fylder hele bredden */
-        padding-left: 0 !important; /* Fjerner eventuelle venstremarginer */
-        padding-right: 0 !important; /* Fjerner eventuelle højremarginer */
-    }
+.login-background .main-content {
+    width: 100%;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+}
 
-/* Generel styling for layout */
+/* Flex layout for sider */
 .page {
     position: relative;
     display: flex;
     flex-direction: column;
+    height: 100vh; /* Fylder hele hÃ¸jden */
 }
 
 main {
     flex: 1;
-}
-
-.sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
-}
-
-/* Styling for top-bar */
-.top-row {
+    overflow-y: auto;
     background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
-    height: 3.5rem;
-    display: flex;
-    align-items: center;
+    padding: 1rem;
 }
 
-    .top-row ::deep a, .top-row ::deep .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-        text-decoration: none;
-    }
-
-        .top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
-            text-decoration: underline;
-        }
-
-        .top-row ::deep a:first-child {
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-/* Responsiv styling */
-@media (max-width: 640.98px) {
-    .top-row {
-        justify-content: space-between;
-    }
-
-        .top-row ::deep a, .top-row ::deep .btn-link {
-            margin-left: 0;
-        }
-}
-
+/* Sidebar layout i standardvisning */
 @media (min-width: 641px) {
     .page {
         flex-direction: row;
@@ -91,14 +55,33 @@ main {
         z-index: 1;
     }
 
-        .top-row.auth ::deep a:first-child {
-            flex: 1;
-            text-align: right;
-            width: 0;
-        }
-
     .top-row, article {
         padding-left: 2rem !important;
         padding-right: 1.5rem !important;
     }
+}
+
+/* Styling til top-bar */
+.top-row {
+    background-color: #f7f7f7;
+    border-bottom: 1px solid #d6d5d5;
+    justify-content: flex-end;
+    height: 3.5rem;
+    display: flex;
+    align-items: center;
+}
+
+.top-row ::deep a, .top-row ::deep .btn-link {
+    white-space: nowrap;
+    margin-left: 1.5rem;
+    text-decoration: none;
+}
+
+.top-row ::deep a:hover, .top-row ::deep .btn-link:hover {
+    text-decoration: underline;
+}
+
+.top-row ::deep a:first-child {
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

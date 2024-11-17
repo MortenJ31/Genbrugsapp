@@ -1,11 +1,24 @@
-﻿@page "/home"
-
-@attribute [Authorize]
-
-
+﻿@page "/Home"
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+<div class="container text-center mt-5">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="display-4 text-success">Velkommen til GenbrugsMarked</h1>
+            <p class="lead text-muted">Et bæredygtigt initiativ fra Erhvervsakademi Aarhus</p>
+        </div>
+    </div>
 
-Welcome to your new app.
+    <div class="row mt-4">
+        <div class="col-12">
+            <img src="img/recycle.jpeg" alt="Genbrug" class="img-fluid rounded shadow-sm" style="max-height: 300px;">
+        </div>
+    </div>
+    <div class="row mt-5">
+        <div class="col-12">
+            <a href="/annonce" class="btn btn-success btn-lg shadow">Se Annoncer</a>
+            <a href="/minprofil" class="btn btn-outline-success btn-lg shadow ms-3">Min Profil</a>
+        </div>
+    </div>
+</div>

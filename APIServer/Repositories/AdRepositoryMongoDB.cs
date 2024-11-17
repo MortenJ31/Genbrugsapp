@@ -19,7 +19,7 @@ namespace APIServer.Repositories
             return await _ads.Find(ad => true).ToListAsync();
         }
 
-        public async Task<Ad?> GetAdByIdAsync(string id) // Matcher nu nullable returntype
+        public async Task<Ad?> GetAdByIdAsync(string id)
         {
             return await _ads.Find(ad => ad.Id == id).FirstOrDefaultAsync();
         }
@@ -65,6 +65,12 @@ namespace APIServer.Repositories
                 filter &= filterBuilder.Eq("categoryId", categoryObjectId);
             }
 
+            return await _ads.Find(filter).ToListAsync();
+        }
+
+        public async Task<List<Ad>> GetAdsByUserIdAsync(string userId)
+        {
+            var filter = Builders<Ad>.Filter.Eq(ad => ad.UserId, userId); // Find ads by userId
             return await _ads.Find(filter).ToListAsync();
         }
     }
