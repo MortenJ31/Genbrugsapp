@@ -1,78 +1,75 @@
 ﻿using Blazored.LocalStorage;
-using Genbrugsapp.Service;
+using Core; 
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 
-public class LoginServiceClientSide : ILoginService
+namespace Genbrugsapp.Service
 {
-    private readonly HttpClient _httpClient;
-    private readonly ILocalStorageService _localStorageService;
-
-    // Konstruktor til at injicere HttpClient og LocalStorageService
-    public LoginServiceClientSide(HttpClient httpClient, ILocalStorageService localStorageService)
+    public class LoginServiceClientSide : ILoginService
     {
-        _httpClient = httpClient;
-        _localStorageService = localStorageService;
-    }
+        private readonly HttpClient _httpClient;
+        private readonly ILocalStorageService _localStorageService;
 
-    // Implementering af Login-metoden
-    public async Task<LoginResponse> Login(string username, string password)
-    {
-        var loginRequest = new { Username = username, Password = password };
-        var response = await _httpClient.PostAsJsonAsync("/api/user/login", loginRequest);
-
-        if (response.IsSuccessStatusCode)
+        // Konstruktor til at injicere HttpClient og LocalStorageService
+        public LoginServiceClientSide(HttpClient httpClient, ILocalStorageService localStorageService)
         {
-            var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
-            if (result != null)
+            _httpClient = httpClient;
+            _localStorageService = localStorageService;
+        }
+
+        // Login-metoden med LoginRequest og LoginResponse fra Core
+        public async Task<LoginResponse> Login(LoginRequest loginRequest)
+        {
+            var response = await _httpClient.PostAsJsonAsync("/api/user/login", loginRequest);
+
+            if (response.IsSuccessStatusCode)
             {
-                await _localStorageService.SetItemAsync("userId", result.UserId);
-                await _localStorageService.SetItemAsync("username", result.Username);
+                var result = await response.Content.ReadFromJsonAsync<LoginResponse>();
+                if (result != null)
+                {
+                    await _localStorageService.SetItemAsync("userId", result.UserId);
+                    await _localStorageService.SetItemAsync("username", result.Username);
+                }
+                return result;
             }
-            return result;
+            return null; // Returner null ved fejl
         }
-        else
+
+        // GetUserLoggedIn-metoden for at hente den aktuelle bruger fra LocalStorage
+        public async Task<User?> GetUserLoggedIn()
         {
-            return new LoginResponse
+            var userId = await _localStorageService.GetItemAsync<string>("userId");
+            var username = await _localStorageService.GetItemAsync<string>("username");
+
+            if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(username))
             {
-                UserId = null,
-                Username = null
-            };
+                return new User
+                {
+                    UserId = userId,
+                    Username = username
+                };
+            }
+            return null; // Ingen bruger er logget ind
         }
-    }
 
-    // Implementering af GetUserLoggedIn-metoden
-    public async Task<User?> GetUserLoggedIn()
-    {
-        var userId = await _localStorageService.GetItemAsync<string>("userId");
-        var username = await _localStorageService.GetItemAsync<string>("username");
-
-        if (!string.IsNullOrEmpty(userId) && !string.IsNullOrEmpty(username))
+        // Logout-metoden for at fjerne brugerdata fra LocalStorage
+        public async Task Logout()
         {
-            return new User { UserId = userId, Username = username };
+            await _localStorageService.RemoveItemAsync("userId");
+            await _localStorageService.RemoveItemAsync("username");
         }
 
-        return null;
-    }
+        // GetUserId-metoden for kun at hente brugerens ID
+        public async Task<string> GetUserId()
+        {
+            return await _localStorageService.GetItemAsync<string>("userId");
+        }
 
-    // Implementering af Logout-metoden
-    public async Task Logout()
-    {
-        await _localStorageService.RemoveItemAsync("userId");
-        await _localStorageService.RemoveItemAsync("username");
-    }
-
-    // Implementering af GetUserId-metoden (ny)
-    public async Task<string> GetUserId()
-    {
-        var userId = await _localStorageService.GetItemAsync<string>("userId");
-        return userId;
-    }
-
-    // Implementering af SetUserId-metoden (ny)
-    public async Task SetUserId(string userId)
-    {
-        await _localStorageService.SetItemAsync("userId", userId);
+        // SetUserId-metoden for at gemme brugerens ID
+        public async Task SetUserId(string userId)
+        {
+            await _localStorageService.SetItemAsync("userId", userId);
+        }
     }
 }

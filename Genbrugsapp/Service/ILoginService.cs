@@ -5,10 +5,10 @@ namespace Genbrugsapp.Service
 {
     public interface ILoginService
     {
-        Task<LoginResponse> Login(string username, string password);  
-        Task<User?> GetUserLoggedIn();  
-        Task Logout();  
-        Task<string> GetUserId();  
-        Task SetUserId(string userId);  
+        Task<LoginResponse> Login(LoginRequest loginRequest);  
+        Task<User?> GetUserLoggedIn();
+        Task Logout();
+        Task<string> GetUserId();
+        Task SetUserId(string userId);
     }
 }

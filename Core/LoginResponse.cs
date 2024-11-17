@@ -1,4 +1,5 @@
-namespace Genbrugsapp.Service
+
+namespace Core
 {
     public class LoginResponse
     {

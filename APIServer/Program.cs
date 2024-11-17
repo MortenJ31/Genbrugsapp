@@ -36,6 +36,10 @@ builder.Services.AddSingleton<MongoDbService>();
 builder.Services.AddSingleton<IAdRepository, AdRepositoryMongoDB>();
 builder.Services.AddSingleton<ILocationRepository, LocationRepositoryMongoDB>();
 builder.Services.AddSingleton<ICategoryRepository, CategoryRepositoryMongoDB>();
+builder.Services.AddScoped<IUserRepository, UserRepositoryMongoDB>(); // Tilføj denne linje for UserRepository
+
+// Registrer Services
+builder.Services.AddScoped<UserService>(); // Tilføj denne linje for UserService
 
 // CORS setup
 builder.Services.AddCors(options =>

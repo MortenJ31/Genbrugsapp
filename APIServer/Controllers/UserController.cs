@@ -1,6 +1,6 @@
-using Microsoft.AspNetCore.Mvc;
-using MongoDB.Driver;
 using Core;
+using APIServer.Services;
+using Microsoft.AspNetCore.Mvc;
 
 namespace APIServer.Controllers
 {
@@ -8,49 +8,70 @@ namespace APIServer.Controllers
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        private readonly IMongoCollection<User> _users;
+        private readonly UserService _userService;
 
-        public UserController(IMongoDatabase database)
+        public UserController(UserService userService)
         {
-            _users = database.GetCollection<User>("Users");
+            _userService = userService;
         }
 
-        // Endpoint til at registrere brugere
-        [HttpPost("register")]
-        public async Task<IActionResult> Register(User user)
+        [HttpGet]
+        public async Task<ActionResult<List<User>>> GetAllUsers()
         {
-            // Tjek om brugeren allerede eksisterer
-            var existingUser = await _users.Find(u => u.Username == user.Username).FirstOrDefaultAsync();
+            var users = await _userService.GetAllUsersAsync();
+            return Ok(users);
+        }
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<User>> GetUserById(string id)
+        {
+            var user = await _userService.GetUserByIdAsync(id);
+            if (user == null)
+                return NotFound();
+
+            return Ok(user);
+        }
+
+        [HttpPost("register")]
+        public async Task<IActionResult> Register([FromBody] User newUser)
+        {
+            // Tjek om brugernavn allerede eksisterer
+            var existingUser = await _userService.GetUserByUsernameAsync(newUser.Username);
             if (existingUser != null)
             {
-                return BadRequest("Brugernavn eksisterer allerede.");
+                return BadRequest(new { message = "Brugernavn eksisterer allerede." });
             }
 
-            // Tilføj brugeren til databasen
-            await _users.InsertOneAsync(user);
-            return Ok("Bruger oprettet.");
+            await _userService.AddUserAsync(newUser);
+            return Ok(new { message = "Bruger oprettet." });
         }
 
-        // Endpoint til at logge ind
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginRequest request)
         {
-            var trimmedUsername = request.Username?.Trim();
-            var trimmedPassword = request.Password?.Trim();
+            
+            var user = await _userService.GetUserByUsernameAsync(request.Username);
 
-            // Find brugeren i databasen baseret på brugernavn og password
-            var existingUser = await _users.Find(u =>
-                u.Username.ToLower() == trimmedUsername.ToLower() &&
-                u.Password == trimmedPassword
-            ).FirstOrDefaultAsync();
-
-            if (existingUser == null)
+            if (user == null || user.Password != request.Password)
             {
-                return Unauthorized("Forkert brugernavn eller kodeord.");
+                return Unauthorized(new { message = "Forkert brugernavn eller kodeord." });
             }
 
-            // Returner UserId som en string i stedet for ObjectId
-            return Ok(new { userId = existingUser.Id.ToString(), message = "Login succesfuldt" });
+            return Ok(new { userId = user.UserId, message = "Login succesfuldt" });
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateUser(string id, [FromBody] User updatedUser)
+        {
+            await _userService.UpdateUserAsync(id, updatedUser);
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteUser(string id)
+        {
+            await _userService.DeleteUserAsync(id);
+            return NoContent();
         }
     }
 }

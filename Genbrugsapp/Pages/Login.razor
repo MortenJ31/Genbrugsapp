@@ -1,6 +1,5 @@
 ﻿@page "/"
-@using Genbrugsapp.Service
-@using Blazored.LocalStorage
+@using Core
 @inject ILoginService loginService
 @inject NavigationManager navManager
 @inject ILocalStorageService localStorage
@@ -12,7 +11,7 @@
             <p class="lead text-secondary">Her kan du købe og sælge genbrugsvare.</p>
             <p>
                 Formålet er at skabe et bæredygtigt miljø og fremme genbrug som en central del af vores klimainitiativer.
-                For at støtte dette projekt vil Eaaa stille lokaler tilrådighed til opbevaring af genbrugsvarer,
+                For at støtte dette projekt vil Eaaa stille lokaler til rådighed til opbevaring af genbrugsvarer,
                 som vil være tilgængelige i en begrænset åbningstid med personale til stede.
             </p>
             <div class="recycle-image-container">
@@ -22,28 +21,24 @@
 
         <div class="col-md-6 d-flex flex-column justify-content-center bg-white p-4 rounded shadow-sm">
             <h3 class="text-center text-success mb-4">🌍 Login</h3>
-            <div class="mb-3">
-                <label for="username" class="form-label">Brugernavn:</label>
-                <InputText id="username" @bind-Value="username" 
-                           placeholder="Indtast brugernavn..." class="form-control" />
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Password:</label>
-                <InputText id="password" @bind-Value="password" type="password" 
-                           placeholder="Indtast password..." class="form-control" />
-            </div>
-
-            <div class="d-flex justify-content-center mb-3">
-                <p class="text-center">
-                    Ny her? <a href="/register" class="text-success">Opret her</a>
-                </p>
-            </div>
-
-            <div class="d-flex justify-content-end mb-3">
-                <button @onclick="OnClickLogin" class="btn btn-success w-100" disabled="@isLoggingIn">
-                    @(isLoggingIn ? "Logger ind..." : "Login")
-                </button>
-            </div>
+            <EditForm Model="@loginRequest" OnValidSubmit="OnClickLogin">
+                <DataAnnotationsValidator />
+                <div class="mb-3">
+                    <label for="username" class="form-label">Brugernavn:</label>
+                    <InputText id="username" @bind-Value="loginRequest.Username" 
+                               placeholder="Indtast brugernavn..." class="form-control" />
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password:</label>
+                    <InputText id="password" @bind-Value="loginRequest.Password" type="password" 
+                               placeholder="Indtast password..." class="form-control" />
+                </div>
+                <div class="d-flex justify-content-end mb-3">
+                    <button type="submit" class="btn btn-success w-100" disabled="@isLoggingIn">
+                        @(isLoggingIn ? "Logger ind..." : "Login")
+                    </button>
+                </div>
+            </EditForm>
             @if (!string.IsNullOrEmpty(errorText))
             {
                 <div class="text-danger text-center">
@@ -55,14 +50,13 @@
 </div>
 
 @code {
-    private string username = "";
-    private string password = "";
+    private LoginRequest loginRequest = new LoginRequest();
     private string errorText = "";
     private bool isLoggingIn = false;
 
     private async Task OnClickLogin()
     {
-        if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
+        if (string.IsNullOrWhiteSpace(loginRequest.Username) || string.IsNullOrWhiteSpace(loginRequest.Password))
         {
             errorText = "Brugernavn og adgangskode må ikke være tomme.";
             return;
@@ -72,17 +66,17 @@
 
         try
         {
-            var loginResponse = await loginService.Login(username, password);
+            var loginResponse = await loginService.Login(loginRequest);
 
             if (loginResponse != null && !string.IsNullOrEmpty(loginResponse.UserId))
             {
-                await localStorage.SetItemAsync("userid", loginResponse.UserId); // Brug "userid" som nøgle
+                await localStorage.SetItemAsync("userid", loginResponse.UserId);
                 navManager.NavigateTo("/Home");
             }
             else
             {
                 await localStorage.RemoveItemAsync("userid");
-                errorText = "Forkert brugernavn eller adgangskode. Prøv igen.";
+                errorText = "Forkert brugernavn eller adgangskode.";
             }
         }
         catch (Exception ex)
